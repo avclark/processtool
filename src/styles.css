@@ -1,6 +1,10 @@
 
 @import "tailwindcss";
 
+/* bm-design-system:start */
+@import "./styles/design-system.css";
+/* bm-design-system:end */
+
 * {
   box-sizing: border-box;
 }

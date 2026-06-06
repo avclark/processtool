@@ -9,38 +9,137 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as DesignSystemRouteImport } from './routes/design-system'
+import { Route as ShellRouteImport } from './routes/_shell'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ShellWorkflowsRouteImport } from './routes/_shell/workflows'
+import { Route as ShellShowsRouteImport } from './routes/_shell/shows'
+import { Route as ShellProcessesRouteImport } from './routes/_shell/processes'
+import { Route as ShellPeopleRouteImport } from './routes/_shell/people'
+import { Route as ShellDashboardRouteImport } from './routes/_shell/dashboard'
 
+const DesignSystemRoute = DesignSystemRouteImport.update({
+  id: '/design-system',
+  path: '/design-system',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ShellRoute = ShellRouteImport.update({
+  id: '/_shell',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ShellWorkflowsRoute = ShellWorkflowsRouteImport.update({
+  id: '/workflows',
+  path: '/workflows',
+  getParentRoute: () => ShellRoute,
+} as any)
+const ShellShowsRoute = ShellShowsRouteImport.update({
+  id: '/shows',
+  path: '/shows',
+  getParentRoute: () => ShellRoute,
+} as any)
+const ShellProcessesRoute = ShellProcessesRouteImport.update({
+  id: '/processes',
+  path: '/processes',
+  getParentRoute: () => ShellRoute,
+} as any)
+const ShellPeopleRoute = ShellPeopleRouteImport.update({
+  id: '/people',
+  path: '/people',
+  getParentRoute: () => ShellRoute,
+} as any)
+const ShellDashboardRoute = ShellDashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
+  getParentRoute: () => ShellRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/design-system': typeof DesignSystemRoute
+  '/dashboard': typeof ShellDashboardRoute
+  '/people': typeof ShellPeopleRoute
+  '/processes': typeof ShellProcessesRoute
+  '/shows': typeof ShellShowsRoute
+  '/workflows': typeof ShellWorkflowsRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/design-system': typeof DesignSystemRoute
+  '/dashboard': typeof ShellDashboardRoute
+  '/people': typeof ShellPeopleRoute
+  '/processes': typeof ShellProcessesRoute
+  '/shows': typeof ShellShowsRoute
+  '/workflows': typeof ShellWorkflowsRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/_shell': typeof ShellRouteWithChildren
+  '/design-system': typeof DesignSystemRoute
+  '/_shell/dashboard': typeof ShellDashboardRoute
+  '/_shell/people': typeof ShellPeopleRoute
+  '/_shell/processes': typeof ShellProcessesRoute
+  '/_shell/shows': typeof ShellShowsRoute
+  '/_shell/workflows': typeof ShellWorkflowsRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/design-system'
+    | '/dashboard'
+    | '/people'
+    | '/processes'
+    | '/shows'
+    | '/workflows'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/design-system'
+    | '/dashboard'
+    | '/people'
+    | '/processes'
+    | '/shows'
+    | '/workflows'
+  id:
+    | '__root__'
+    | '/'
+    | '/_shell'
+    | '/design-system'
+    | '/_shell/dashboard'
+    | '/_shell/people'
+    | '/_shell/processes'
+    | '/_shell/shows'
+    | '/_shell/workflows'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  ShellRoute: typeof ShellRouteWithChildren
+  DesignSystemRoute: typeof DesignSystemRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/design-system': {
+      id: '/design-system'
+      path: '/design-system'
+      fullPath: '/design-system'
+      preLoaderRoute: typeof DesignSystemRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_shell': {
+      id: '/_shell'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof ShellRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -48,11 +147,66 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_shell/workflows': {
+      id: '/_shell/workflows'
+      path: '/workflows'
+      fullPath: '/workflows'
+      preLoaderRoute: typeof ShellWorkflowsRouteImport
+      parentRoute: typeof ShellRoute
+    }
+    '/_shell/shows': {
+      id: '/_shell/shows'
+      path: '/shows'
+      fullPath: '/shows'
+      preLoaderRoute: typeof ShellShowsRouteImport
+      parentRoute: typeof ShellRoute
+    }
+    '/_shell/processes': {
+      id: '/_shell/processes'
+      path: '/processes'
+      fullPath: '/processes'
+      preLoaderRoute: typeof ShellProcessesRouteImport
+      parentRoute: typeof ShellRoute
+    }
+    '/_shell/people': {
+      id: '/_shell/people'
+      path: '/people'
+      fullPath: '/people'
+      preLoaderRoute: typeof ShellPeopleRouteImport
+      parentRoute: typeof ShellRoute
+    }
+    '/_shell/dashboard': {
+      id: '/_shell/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof ShellDashboardRouteImport
+      parentRoute: typeof ShellRoute
+    }
   }
 }
 
+interface ShellRouteChildren {
+  ShellDashboardRoute: typeof ShellDashboardRoute
+  ShellPeopleRoute: typeof ShellPeopleRoute
+  ShellProcessesRoute: typeof ShellProcessesRoute
+  ShellShowsRoute: typeof ShellShowsRoute
+  ShellWorkflowsRoute: typeof ShellWorkflowsRoute
+}
+
+const ShellRouteChildren: ShellRouteChildren = {
+  ShellDashboardRoute: ShellDashboardRoute,
+  ShellPeopleRoute: ShellPeopleRoute,
+  ShellProcessesRoute: ShellProcessesRoute,
+  ShellShowsRoute: ShellShowsRoute,
+  ShellWorkflowsRoute: ShellWorkflowsRoute,
+}
+
+const ShellRouteWithChildren = ShellRoute._addFileChildren(ShellRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  ShellRoute: ShellRouteWithChildren,
+  DesignSystemRoute: DesignSystemRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
