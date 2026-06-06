@@ -1,58 +1,21 @@
-/**
- * TEMPORARY smoke-test auth + queries — remove in Phase 3.
- */
-import * as React from "react";
-import { createFileRoute } from "@tanstack/react-router";
-import { supabase } from "@/lib/supabase";
-import { useShows, useWorkflows } from "@/lib/queries/smoke-test";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { useShows } from "@/lib/queries/shows";
+import { useWorkflows } from "@/lib/queries/workflows";
+import { useProcesses } from "@/lib/queries/processes";
+import { usePeople } from "@/lib/queries/people";
+import { useEpisodes } from "@/lib/queries/episodes";
 import { Badge } from "@/components/ui/badge";
 
 export const Route = createFileRoute("/_shell/dashboard")({
   component: DashboardPage,
 });
 
-// ── TEMPORARY: smoke-test auth ──────────────────────────────────────
-// Signs in as the v1 test user so RLS-protected reads work.
-// Credentials come from .env.local (VITE_SMOKE_TEST_EMAIL / PASSWORD).
-// This entire block is removed in Phase 3 when real auth lands.
-function useSmokeTestAuth() {
-  const [status, setStatus] = React.useState<
-    "idle" | "signing-in" | "authenticated" | "error"
-  >("idle");
-  const [error, setError] = React.useState<string | null>(null);
-
-  React.useEffect(() => {
-    const email = import.meta.env.VITE_SMOKE_TEST_EMAIL;
-    const password = import.meta.env.VITE_SMOKE_TEST_PASSWORD;
-
-    if (!email || !password) {
-      setStatus("error");
-      setError(
-        "Missing VITE_SMOKE_TEST_EMAIL or VITE_SMOKE_TEST_PASSWORD in .env.local",
-      );
-      return;
-    }
-
-    setStatus("signing-in");
-
-    supabase.auth
-      .signInWithPassword({ email, password })
-      .then(({ error: authError }) => {
-        if (authError) {
-          setStatus("error");
-          setError(authError.message);
-        } else {
-          setStatus("authenticated");
-        }
-      });
-  }, []);
-
-  return { status, error };
-}
-// ── END TEMPORARY ───────────────────────────────────────────────────
-
 function DashboardPage() {
-  const auth = useSmokeTestAuth();
+  const shows = useShows();
+  const workflows = useWorkflows();
+  const processes = useProcesses();
+  const people = usePeople();
+  const episodes = useEpisodes();
 
   return (
     <>
@@ -60,104 +23,100 @@ function DashboardPage() {
         <h1>Dashboard</h1>
       </div>
 
-      {/* ── TEMPORARY: Phase 2 smoke test ── */}
-      <div className="mt-8 rounded-lg border border-signal-faded bg-signal-faded p-6">
-        <div className="mb-4 flex items-center gap-2">
-          <Badge tone="signal">Temporary</Badge>
-          <h2 className="text-lg">Phase 2 Smoke Test</h2>
-        </div>
-        <p className="mb-6 text-sm text-ink-muted">
-          Proves Supabase connection, types, RLS, and TanStack Query work
-          end-to-end. Removed in Phase 3.
-        </p>
-
-        {auth.status === "signing-in" && (
-          <p className="text-sm text-ink-muted">Signing in as test user...</p>
-        )}
-        {auth.status === "error" && (
-          <div className="callout callout-danger">
-            <p>
-              <strong>Auth error:</strong> {auth.error}
-            </p>
-          </div>
-        )}
-        {auth.status === "authenticated" && <SmokeTestResults />}
+      <div className="mt-8 grid grid-cols-2 gap-4 sm:grid-cols-4">
+        <StatCard
+          label="Shows"
+          value={shows.data?.length}
+          loading={shows.isLoading}
+          to="/shows"
+        />
+        <StatCard
+          label="Workflows"
+          value={workflows.data?.length}
+          loading={workflows.isLoading}
+          to="/workflows"
+        />
+        <StatCard
+          label="Processes"
+          value={processes.data?.length}
+          loading={processes.isLoading}
+          to="/processes"
+        />
+        <StatCard
+          label="People"
+          value={people.data?.length}
+          loading={people.isLoading}
+          to="/people"
+        />
       </div>
-      {/* ── END TEMPORARY ── */}
+
+      <div className="mt-10">
+        <h2>Recent Episodes</h2>
+        <div className="mt-4">
+          {episodes.isLoading && (
+            <p className="text-sm text-ink-muted">Loading episodes...</p>
+          )}
+          {episodes.error && (
+            <div className="callout callout-danger">
+              <p>Failed to load episodes.</p>
+            </div>
+          )}
+          {episodes.data && episodes.data.length === 0 && (
+            <p className="text-sm text-ink-muted">No episodes yet.</p>
+          )}
+          {episodes.data && episodes.data.length > 0 && (
+            <ul className="divide-y divide-hairline overflow-hidden rounded-md border border-hairline bg-page">
+              {episodes.data.slice(0, 10).map((ep) => (
+                <li key={ep.id}>
+                  <Link
+                    to="/episodes/$id"
+                    params={{ id: ep.id }}
+                    className="flex items-center gap-3 px-4 py-3 no-underline hover:bg-surface"
+                  >
+                    <div className="min-w-0 flex-1">
+                      <div className="truncate text-sm font-medium text-ink-display">
+                        {ep.title}
+                      </div>
+                      <div className="truncate text-xs text-ink-muted">
+                        {ep.shows?.name ?? "—"}
+                      </div>
+                    </div>
+                    <Badge
+                      tone={ep.status === "completed" ? "accent" : "neutral"}
+                    >
+                      {ep.status}
+                    </Badge>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      </div>
     </>
   );
 }
 
-function SmokeTestResults() {
-  const shows = useShows();
-  const workflows = useWorkflows();
-
-  return (
-    <div className="space-y-6">
-      <SmokeTestTable
-        label="Shows"
-        query={shows}
-        columns={["name", "created_at"]}
-      />
-      <SmokeTestTable
-        label="Workflows"
-        query={workflows}
-        columns={["name", "created_at"]}
-      />
-    </div>
-  );
-}
-
-function SmokeTestTable({
+function StatCard({
   label,
-  query,
-  columns,
+  value,
+  loading,
+  to,
 }: {
   label: string;
-  query: { data?: Array<Record<string, unknown>> | null; isLoading: boolean; error: unknown };
-  columns: string[];
+  value: number | undefined;
+  loading: boolean;
+  to: string;
 }) {
-  if (query.isLoading) {
-    return <p className="text-sm text-ink-muted">Loading {label}...</p>;
-  }
-
-  if (query.error) {
-    return (
-      <div className="callout callout-danger">
-        <p>
-          <strong>{label} error:</strong>{" "}
-          {query.error instanceof Error ? query.error.message : String(query.error)}
-        </p>
-      </div>
-    );
-  }
-
-  const rows = query.data ?? [];
-
   return (
-    <div>
-      <h3 className="mb-2">
-        {label}{" "}
-        <Badge tone="accent">{rows.length}</Badge>
-      </h3>
-      {rows.length === 0 ? (
-        <p className="text-sm text-ink-muted">No rows returned.</p>
-      ) : (
-        <ul className="divide-y divide-hairline overflow-hidden rounded-md border border-hairline bg-page">
-          {rows.map((row, i) => (
-            <li key={String(row.id ?? i)} className="px-4 py-3">
-              <div className="flex items-center gap-4 text-sm">
-                {columns.map((col) => (
-                  <span key={col} className="text-ink-body">
-                    <span className="text-ink-muted">{col}:</span>{" "}
-                    {String(row[col] ?? "—")}
-                  </span>
-                ))}
-              </div>
-            </li>
-          ))}
-        </ul>
-      )}
-    </div>
+    <Link
+      to={to}
+      className="rounded-lg border border-hairline bg-page p-4 no-underline hover:bg-surface"
+    >
+      <div className="text-xs text-ink-muted">{label}</div>
+      <div className="mt-1 font-display text-2xl font-semibold text-ink-display">
+        {loading ? "—" : (value ?? 0)}
+      </div>
+    </Link>
   );
 }

@@ -12,11 +12,16 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as DesignSystemRouteImport } from './routes/design-system'
 import { Route as ShellRouteImport } from './routes/_shell'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as ShellWorkflowsRouteImport } from './routes/_shell/workflows'
-import { Route as ShellShowsRouteImport } from './routes/_shell/shows'
-import { Route as ShellProcessesRouteImport } from './routes/_shell/processes'
-import { Route as ShellPeopleRouteImport } from './routes/_shell/people'
 import { Route as ShellDashboardRouteImport } from './routes/_shell/dashboard'
+import { Route as ShellWorkflowsIndexRouteImport } from './routes/_shell/workflows/index'
+import { Route as ShellShowsIndexRouteImport } from './routes/_shell/shows/index'
+import { Route as ShellProcessesIndexRouteImport } from './routes/_shell/processes/index'
+import { Route as ShellPeopleIndexRouteImport } from './routes/_shell/people/index'
+import { Route as ShellWorkflowsIdRouteImport } from './routes/_shell/workflows/$id'
+import { Route as ShellShowsIdRouteImport } from './routes/_shell/shows/$id'
+import { Route as ShellProcessesIdRouteImport } from './routes/_shell/processes/$id'
+import { Route as ShellPeopleIdRouteImport } from './routes/_shell/people/$id'
+import { Route as ShellEpisodesIdRouteImport } from './routes/_shell/episodes.$id'
 
 const DesignSystemRoute = DesignSystemRouteImport.update({
   id: '/design-system',
@@ -32,29 +37,54 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ShellWorkflowsRoute = ShellWorkflowsRouteImport.update({
-  id: '/workflows',
-  path: '/workflows',
-  getParentRoute: () => ShellRoute,
-} as any)
-const ShellShowsRoute = ShellShowsRouteImport.update({
-  id: '/shows',
-  path: '/shows',
-  getParentRoute: () => ShellRoute,
-} as any)
-const ShellProcessesRoute = ShellProcessesRouteImport.update({
-  id: '/processes',
-  path: '/processes',
-  getParentRoute: () => ShellRoute,
-} as any)
-const ShellPeopleRoute = ShellPeopleRouteImport.update({
-  id: '/people',
-  path: '/people',
-  getParentRoute: () => ShellRoute,
-} as any)
 const ShellDashboardRoute = ShellDashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
+  getParentRoute: () => ShellRoute,
+} as any)
+const ShellWorkflowsIndexRoute = ShellWorkflowsIndexRouteImport.update({
+  id: '/workflows/',
+  path: '/workflows/',
+  getParentRoute: () => ShellRoute,
+} as any)
+const ShellShowsIndexRoute = ShellShowsIndexRouteImport.update({
+  id: '/shows/',
+  path: '/shows/',
+  getParentRoute: () => ShellRoute,
+} as any)
+const ShellProcessesIndexRoute = ShellProcessesIndexRouteImport.update({
+  id: '/processes/',
+  path: '/processes/',
+  getParentRoute: () => ShellRoute,
+} as any)
+const ShellPeopleIndexRoute = ShellPeopleIndexRouteImport.update({
+  id: '/people/',
+  path: '/people/',
+  getParentRoute: () => ShellRoute,
+} as any)
+const ShellWorkflowsIdRoute = ShellWorkflowsIdRouteImport.update({
+  id: '/workflows/$id',
+  path: '/workflows/$id',
+  getParentRoute: () => ShellRoute,
+} as any)
+const ShellShowsIdRoute = ShellShowsIdRouteImport.update({
+  id: '/shows/$id',
+  path: '/shows/$id',
+  getParentRoute: () => ShellRoute,
+} as any)
+const ShellProcessesIdRoute = ShellProcessesIdRouteImport.update({
+  id: '/processes/$id',
+  path: '/processes/$id',
+  getParentRoute: () => ShellRoute,
+} as any)
+const ShellPeopleIdRoute = ShellPeopleIdRouteImport.update({
+  id: '/people/$id',
+  path: '/people/$id',
+  getParentRoute: () => ShellRoute,
+} as any)
+const ShellEpisodesIdRoute = ShellEpisodesIdRouteImport.update({
+  id: '/episodes/$id',
+  path: '/episodes/$id',
   getParentRoute: () => ShellRoute,
 } as any)
 
@@ -62,19 +92,29 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/design-system': typeof DesignSystemRoute
   '/dashboard': typeof ShellDashboardRoute
-  '/people': typeof ShellPeopleRoute
-  '/processes': typeof ShellProcessesRoute
-  '/shows': typeof ShellShowsRoute
-  '/workflows': typeof ShellWorkflowsRoute
+  '/episodes/$id': typeof ShellEpisodesIdRoute
+  '/people/$id': typeof ShellPeopleIdRoute
+  '/processes/$id': typeof ShellProcessesIdRoute
+  '/shows/$id': typeof ShellShowsIdRoute
+  '/workflows/$id': typeof ShellWorkflowsIdRoute
+  '/people/': typeof ShellPeopleIndexRoute
+  '/processes/': typeof ShellProcessesIndexRoute
+  '/shows/': typeof ShellShowsIndexRoute
+  '/workflows/': typeof ShellWorkflowsIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/design-system': typeof DesignSystemRoute
   '/dashboard': typeof ShellDashboardRoute
-  '/people': typeof ShellPeopleRoute
-  '/processes': typeof ShellProcessesRoute
-  '/shows': typeof ShellShowsRoute
-  '/workflows': typeof ShellWorkflowsRoute
+  '/episodes/$id': typeof ShellEpisodesIdRoute
+  '/people/$id': typeof ShellPeopleIdRoute
+  '/processes/$id': typeof ShellProcessesIdRoute
+  '/shows/$id': typeof ShellShowsIdRoute
+  '/workflows/$id': typeof ShellWorkflowsIdRoute
+  '/people': typeof ShellPeopleIndexRoute
+  '/processes': typeof ShellProcessesIndexRoute
+  '/shows': typeof ShellShowsIndexRoute
+  '/workflows': typeof ShellWorkflowsIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -82,10 +122,15 @@ export interface FileRoutesById {
   '/_shell': typeof ShellRouteWithChildren
   '/design-system': typeof DesignSystemRoute
   '/_shell/dashboard': typeof ShellDashboardRoute
-  '/_shell/people': typeof ShellPeopleRoute
-  '/_shell/processes': typeof ShellProcessesRoute
-  '/_shell/shows': typeof ShellShowsRoute
-  '/_shell/workflows': typeof ShellWorkflowsRoute
+  '/_shell/episodes/$id': typeof ShellEpisodesIdRoute
+  '/_shell/people/$id': typeof ShellPeopleIdRoute
+  '/_shell/processes/$id': typeof ShellProcessesIdRoute
+  '/_shell/shows/$id': typeof ShellShowsIdRoute
+  '/_shell/workflows/$id': typeof ShellWorkflowsIdRoute
+  '/_shell/people/': typeof ShellPeopleIndexRoute
+  '/_shell/processes/': typeof ShellProcessesIndexRoute
+  '/_shell/shows/': typeof ShellShowsIndexRoute
+  '/_shell/workflows/': typeof ShellWorkflowsIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -93,15 +138,25 @@ export interface FileRouteTypes {
     | '/'
     | '/design-system'
     | '/dashboard'
-    | '/people'
-    | '/processes'
-    | '/shows'
-    | '/workflows'
+    | '/episodes/$id'
+    | '/people/$id'
+    | '/processes/$id'
+    | '/shows/$id'
+    | '/workflows/$id'
+    | '/people/'
+    | '/processes/'
+    | '/shows/'
+    | '/workflows/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/design-system'
     | '/dashboard'
+    | '/episodes/$id'
+    | '/people/$id'
+    | '/processes/$id'
+    | '/shows/$id'
+    | '/workflows/$id'
     | '/people'
     | '/processes'
     | '/shows'
@@ -112,10 +167,15 @@ export interface FileRouteTypes {
     | '/_shell'
     | '/design-system'
     | '/_shell/dashboard'
-    | '/_shell/people'
-    | '/_shell/processes'
-    | '/_shell/shows'
-    | '/_shell/workflows'
+    | '/_shell/episodes/$id'
+    | '/_shell/people/$id'
+    | '/_shell/processes/$id'
+    | '/_shell/shows/$id'
+    | '/_shell/workflows/$id'
+    | '/_shell/people/'
+    | '/_shell/processes/'
+    | '/_shell/shows/'
+    | '/_shell/workflows/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -147,34 +207,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/_shell/workflows': {
-      id: '/_shell/workflows'
-      path: '/workflows'
-      fullPath: '/workflows'
-      preLoaderRoute: typeof ShellWorkflowsRouteImport
-      parentRoute: typeof ShellRoute
-    }
-    '/_shell/shows': {
-      id: '/_shell/shows'
-      path: '/shows'
-      fullPath: '/shows'
-      preLoaderRoute: typeof ShellShowsRouteImport
-      parentRoute: typeof ShellRoute
-    }
-    '/_shell/processes': {
-      id: '/_shell/processes'
-      path: '/processes'
-      fullPath: '/processes'
-      preLoaderRoute: typeof ShellProcessesRouteImport
-      parentRoute: typeof ShellRoute
-    }
-    '/_shell/people': {
-      id: '/_shell/people'
-      path: '/people'
-      fullPath: '/people'
-      preLoaderRoute: typeof ShellPeopleRouteImport
-      parentRoute: typeof ShellRoute
-    }
     '/_shell/dashboard': {
       id: '/_shell/dashboard'
       path: '/dashboard'
@@ -182,23 +214,96 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ShellDashboardRouteImport
       parentRoute: typeof ShellRoute
     }
+    '/_shell/workflows/': {
+      id: '/_shell/workflows/'
+      path: '/workflows'
+      fullPath: '/workflows/'
+      preLoaderRoute: typeof ShellWorkflowsIndexRouteImport
+      parentRoute: typeof ShellRoute
+    }
+    '/_shell/shows/': {
+      id: '/_shell/shows/'
+      path: '/shows'
+      fullPath: '/shows/'
+      preLoaderRoute: typeof ShellShowsIndexRouteImport
+      parentRoute: typeof ShellRoute
+    }
+    '/_shell/processes/': {
+      id: '/_shell/processes/'
+      path: '/processes'
+      fullPath: '/processes/'
+      preLoaderRoute: typeof ShellProcessesIndexRouteImport
+      parentRoute: typeof ShellRoute
+    }
+    '/_shell/people/': {
+      id: '/_shell/people/'
+      path: '/people'
+      fullPath: '/people/'
+      preLoaderRoute: typeof ShellPeopleIndexRouteImport
+      parentRoute: typeof ShellRoute
+    }
+    '/_shell/workflows/$id': {
+      id: '/_shell/workflows/$id'
+      path: '/workflows/$id'
+      fullPath: '/workflows/$id'
+      preLoaderRoute: typeof ShellWorkflowsIdRouteImport
+      parentRoute: typeof ShellRoute
+    }
+    '/_shell/shows/$id': {
+      id: '/_shell/shows/$id'
+      path: '/shows/$id'
+      fullPath: '/shows/$id'
+      preLoaderRoute: typeof ShellShowsIdRouteImport
+      parentRoute: typeof ShellRoute
+    }
+    '/_shell/processes/$id': {
+      id: '/_shell/processes/$id'
+      path: '/processes/$id'
+      fullPath: '/processes/$id'
+      preLoaderRoute: typeof ShellProcessesIdRouteImport
+      parentRoute: typeof ShellRoute
+    }
+    '/_shell/people/$id': {
+      id: '/_shell/people/$id'
+      path: '/people/$id'
+      fullPath: '/people/$id'
+      preLoaderRoute: typeof ShellPeopleIdRouteImport
+      parentRoute: typeof ShellRoute
+    }
+    '/_shell/episodes/$id': {
+      id: '/_shell/episodes/$id'
+      path: '/episodes/$id'
+      fullPath: '/episodes/$id'
+      preLoaderRoute: typeof ShellEpisodesIdRouteImport
+      parentRoute: typeof ShellRoute
+    }
   }
 }
 
 interface ShellRouteChildren {
   ShellDashboardRoute: typeof ShellDashboardRoute
-  ShellPeopleRoute: typeof ShellPeopleRoute
-  ShellProcessesRoute: typeof ShellProcessesRoute
-  ShellShowsRoute: typeof ShellShowsRoute
-  ShellWorkflowsRoute: typeof ShellWorkflowsRoute
+  ShellEpisodesIdRoute: typeof ShellEpisodesIdRoute
+  ShellPeopleIdRoute: typeof ShellPeopleIdRoute
+  ShellProcessesIdRoute: typeof ShellProcessesIdRoute
+  ShellShowsIdRoute: typeof ShellShowsIdRoute
+  ShellWorkflowsIdRoute: typeof ShellWorkflowsIdRoute
+  ShellPeopleIndexRoute: typeof ShellPeopleIndexRoute
+  ShellProcessesIndexRoute: typeof ShellProcessesIndexRoute
+  ShellShowsIndexRoute: typeof ShellShowsIndexRoute
+  ShellWorkflowsIndexRoute: typeof ShellWorkflowsIndexRoute
 }
 
 const ShellRouteChildren: ShellRouteChildren = {
   ShellDashboardRoute: ShellDashboardRoute,
-  ShellPeopleRoute: ShellPeopleRoute,
-  ShellProcessesRoute: ShellProcessesRoute,
-  ShellShowsRoute: ShellShowsRoute,
-  ShellWorkflowsRoute: ShellWorkflowsRoute,
+  ShellEpisodesIdRoute: ShellEpisodesIdRoute,
+  ShellPeopleIdRoute: ShellPeopleIdRoute,
+  ShellProcessesIdRoute: ShellProcessesIdRoute,
+  ShellShowsIdRoute: ShellShowsIdRoute,
+  ShellWorkflowsIdRoute: ShellWorkflowsIdRoute,
+  ShellPeopleIndexRoute: ShellPeopleIndexRoute,
+  ShellProcessesIndexRoute: ShellProcessesIndexRoute,
+  ShellShowsIndexRoute: ShellShowsIndexRoute,
+  ShellWorkflowsIndexRoute: ShellWorkflowsIndexRoute,
 }
 
 const ShellRouteWithChildren = ShellRoute._addFileChildren(ShellRouteChildren)

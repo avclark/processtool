@@ -45,14 +45,15 @@ interface NavItemDef {
   to: string;
   icon: React.ComponentType<{ className?: string }>;
   label: string;
+  exact: boolean;
 }
 
 const NAV_ITEMS: NavItemDef[] = [
-  { to: "/dashboard", icon: LayoutDashboard, label: "Dashboard" },
-  { to: "/workflows", icon: GitBranch, label: "Workflows" },
-  { to: "/shows", icon: Tv, label: "Shows" },
-  { to: "/processes", icon: ListChecks, label: "Processes" },
-  { to: "/people", icon: Users, label: "People" },
+  { to: "/dashboard", icon: LayoutDashboard, label: "Dashboard", exact: true },
+  { to: "/workflows", icon: GitBranch, label: "Workflows", exact: false },
+  { to: "/shows", icon: Tv, label: "Shows", exact: false },
+  { to: "/processes", icon: ListChecks, label: "Processes", exact: false },
+  { to: "/people", icon: Users, label: "People", exact: false },
 ];
 
 function NavItem({
@@ -72,7 +73,7 @@ function NavItem({
         to={item.to}
         onClick={onClick}
         aria-label={open ? undefined : item.label}
-        activeOptions={{ exact: true }}
+        activeOptions={{ exact: item.exact }}
         className="no-underline"
       >
         {({ isActive }) => (
