@@ -4,6 +4,7 @@ import { ReactQueryDevtoolsPanel } from '@tanstack/react-query-devtools'
 import { TanStackDevtools } from '@tanstack/react-devtools'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 
+import { ToastProvider } from '@/components/ui/toast'
 import '../styles.css'
 
 export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
@@ -15,7 +16,9 @@ function RootComponent() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <Outlet />
+      <ToastProvider>
+        <Outlet />
+      </ToastProvider>
       <TanStackDevtools
         config={{
           position: 'bottom-right',

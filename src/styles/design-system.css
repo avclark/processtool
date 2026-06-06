@@ -236,6 +236,45 @@
   .callout-accent { @apply bg-accent-faded; }
   .callout-signal { @apply bg-signal-faded; }
   .callout-danger { @apply bg-danger-faded; }
+
+  /* Toast (notifications) */
+  .toast-viewport {
+    @apply fixed bottom-0 right-0 z-60 m-0 flex w-full max-w-sm list-none flex-col gap-2 p-4 outline-none;
+  }
+  .toast {
+    @apply relative flex items-start gap-3 rounded-lg border border-hairline bg-page p-4 pr-9 shadow-lg;
+  }
+  .toast-success { @apply border-accent/40; }
+  .toast-error { @apply border-danger/40; }
+  .toast-icon { @apply mt-0.5 h-5 w-5 shrink-0; }
+  .toast-success .toast-icon { @apply text-accent-display; }
+  .toast-error .toast-icon { @apply text-danger-display; }
+  .toast-content { @apply min-w-0 flex-1; }
+  .toast-title { @apply text-sm font-semibold text-ink-display; }
+  .toast-description { @apply mt-0.5 text-sm text-ink-muted; }
+  .toast-close {
+    @apply absolute right-2 top-2 cursor-pointer rounded-sm p-1 text-ink-muted hover:text-ink-display;
+    @apply focus:outline-none focus-visible:ring-2 focus-visible:ring-accent;
+  }
+  .toast[data-state="open"] { animation: toast-in 160ms ease-out; }
+  .toast[data-state="closed"] { animation: toast-out 120ms ease-in; }
+  .toast[data-swipe="move"] {
+    transform: translateX(var(--radix-toast-swipe-move-x));
+  }
+  .toast[data-swipe="cancel"] {
+    transform: translateX(0);
+    transition: transform 160ms ease-out;
+  }
+  .toast[data-swipe="end"] { animation: toast-out 120ms ease-in; }
+}
+
+@keyframes toast-in {
+  from { opacity: 0; transform: translateX(100%); }
+  to { opacity: 1; transform: translateX(0); }
+}
+@keyframes toast-out {
+  from { opacity: 1; transform: translateX(0); }
+  to { opacity: 0; transform: translateX(100%); }
 }
 
 html {

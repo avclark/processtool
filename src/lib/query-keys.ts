@@ -30,10 +30,39 @@ export const queryKeys = {
     all: ["episodes"] as const,
     list: () => [...queryKeys.episodes.all, "list"] as const,
     detail: (id: string) => [...queryKeys.episodes.all, id] as const,
+    countByShow: (showId: string) =>
+      [...queryKeys.episodes.all, "countByShow", showId] as const,
   },
   users: {
     all: ["users"] as const,
     list: () => [...queryKeys.users.all, "list"] as const,
     detail: (id: string) => [...queryKeys.users.all, id] as const,
+  },
+  tasks: {
+    all: ["tasks"] as const,
+    openCountByUser: (userId: string) =>
+      [...queryKeys.tasks.all, "openCountByUser", userId] as const,
+  },
+  settingDefinitions: {
+    all: ["settingDefinitions"] as const,
+    list: () => [...queryKeys.settingDefinitions.all, "list"] as const,
+  },
+  showSettingValues: {
+    all: ["showSettingValues"] as const,
+    byShow: (showId: string) =>
+      [...queryKeys.showSettingValues.all, showId] as const,
+  },
+  roles: {
+    all: ["roles"] as const,
+    list: () => [...queryKeys.roles.all, "list"] as const,
+  },
+  roleMembers: {
+    all: ["roleMembers"] as const,
+    list: () => [...queryKeys.roleMembers.all, "list"] as const,
+  },
+  showRoleAssignments: {
+    all: ["showRoleAssignments"] as const,
+    byShow: (showId: string) =>
+      [...queryKeys.showRoleAssignments.all, showId] as const,
   },
 };

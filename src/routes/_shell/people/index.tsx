@@ -1,7 +1,10 @@
+import * as React from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { usePeople } from "@/lib/queries/people";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { PersonFormDialog } from "@/components/people/person-form-dialog";
+import { RolesManager } from "@/components/people/roles-manager";
 
 export const Route = createFileRoute("/_shell/people/")({
   component: PeoplePage,
@@ -9,6 +12,9 @@ export const Route = createFileRoute("/_shell/people/")({
 
 function PeoplePage() {
   const { data, isLoading, error } = usePeople();
+  // "Add Person" creates the record directly. The real invite-email flow
+  // (Supabase Auth invite) is deferred to Phase 11.
+  const [createOpen, setCreateOpen] = React.useState(false);
 
   return (
     <>
@@ -18,9 +24,11 @@ function PeoplePage() {
             <h1>People</h1>
             <p className="mt-1">Team members and their roles.</p>
           </div>
-          <Button disabled>Invite</Button>
+          <Button onClick={() => setCreateOpen(true)}>Add Person</Button>
         </div>
       </div>
+
+      <PersonFormDialog open={createOpen} onOpenChange={setCreateOpen} />
 
       <div className="mt-6">
         {isLoading && (
@@ -57,6 +65,15 @@ function PeoplePage() {
             ))}
           </ul>
         )}
+      </div>
+
+      <div className="mt-12 border-t border-hairline pt-8">
+        <h2 className="mb-1">Roles</h2>
+        <p className="mb-4 text-sm text-ink-muted">
+          Production roles and the pool of people who can fill each. Assign these
+          to specific shows from a show's detail page.
+        </p>
+        <RolesManager />
       </div>
     </>
   );

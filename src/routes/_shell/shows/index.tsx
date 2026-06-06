@@ -1,7 +1,9 @@
+import * as React from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useShows } from "@/lib/queries/shows";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { ShowFormDialog } from "@/components/shows/show-form-dialog";
 
 export const Route = createFileRoute("/_shell/shows/")({
   component: ShowsPage,
@@ -9,6 +11,7 @@ export const Route = createFileRoute("/_shell/shows/")({
 
 function ShowsPage() {
   const { data, isLoading, error } = useShows();
+  const [createOpen, setCreateOpen] = React.useState(false);
 
   return (
     <>
@@ -18,9 +21,11 @@ function ShowsPage() {
             <h1>Shows</h1>
             <p className="mt-1">All shows in your workspace.</p>
           </div>
-          <Button disabled>New Show</Button>
+          <Button onClick={() => setCreateOpen(true)}>New Show</Button>
         </div>
       </div>
+
+      <ShowFormDialog open={createOpen} onOpenChange={setCreateOpen} />
 
       <div className="mt-6">
         {isLoading && (

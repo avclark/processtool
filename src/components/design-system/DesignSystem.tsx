@@ -22,6 +22,7 @@ import { DataTableSection } from "@/components/design-system/sections/elements/D
 import { ModalSection } from "@/components/design-system/sections/elements/ModalSection";
 import { CalloutSection } from "@/components/design-system/sections/elements/CalloutSection";
 import { DropdownMenuSection } from "@/components/design-system/sections/elements/DropdownMenuSection";
+import { ToastSection } from "@/components/design-system/sections/elements/ToastSection";
 
 export function DesignSystem() {
   const [navOpen, setNavOpen] = React.useState(false);
@@ -107,6 +108,7 @@ export function DesignSystem() {
           <ModalSection />
           <DropdownMenuSection />
           <CalloutSection />
+          <ToastSection />
           <BaseStylesSection />
         </main>
       </div>

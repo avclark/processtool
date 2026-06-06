@@ -38,6 +38,7 @@ const NAV: NavGroup[] = [
       { id: "modal", label: "Modal" },
       { id: "dropdown-menu", label: "Dropdown menu" },
       { id: "callout", label: "Callout" },
+      { id: "toast", label: "Toast" },
     ],
   },
   {
