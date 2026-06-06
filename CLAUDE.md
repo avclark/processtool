@@ -18,6 +18,14 @@ Workflow -> Process -> Tasks. A Process is a reusable template with show-attribu
 Applying a Process to an episode generates a one-time live task list (instance). Template edits
 do NOT propagate to existing episodes. Instance edits are one-offs and do NOT propagate back.
 
+## Routing convention
+Use directory-based routing for entities with both list and detail routes:
+  routes/_shell/workflows/index.tsx   → /workflows (list)
+  routes/_shell/workflows/$id.tsx     → /workflows/$id (detail)
+Do NOT use dot notation (workflows.$id.tsx) — it creates parent-child nesting,
+which requires the list page to render an <Outlet /> for the detail to appear.
+The directory pattern keeps list and detail as siblings under _shell.
+
 ## Hard rules
 - No auto-save anywhere. Explicit Save/Update only.
 - Browser talks directly to Supabase (anon key). RLS is the security boundary. Never use the service-role key client-side.
