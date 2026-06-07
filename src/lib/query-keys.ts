@@ -39,6 +39,31 @@ export const queryKeys = {
     byTemplate: (templateId: string) =>
       [...queryKeys.taskTemplateBlocks.all, templateId] as const,
   },
+  visibilityRules: {
+    all: ["visibilityRules"] as const,
+    byTemplate: (templateId: string) =>
+      [...queryKeys.visibilityRules.all, templateId] as const,
+  },
+  dependencies: {
+    all: ["dependencies"] as const,
+    byTemplate: (templateId: string) =>
+      [...queryKeys.dependencies.all, templateId] as const,
+  },
+  dateRules: {
+    all: ["dateRules"] as const,
+    byTemplate: (templateId: string) =>
+      [...queryKeys.dateRules.all, templateId] as const,
+  },
+  completionActions: {
+    all: ["completionActions"] as const,
+    byTemplate: (templateId: string) =>
+      [...queryKeys.completionActions.all, templateId] as const,
+  },
+  emailTemplate: {
+    all: ["emailTemplate"] as const,
+    byTemplate: (templateId: string) =>
+      [...queryKeys.emailTemplate.all, templateId] as const,
+  },
   episodes: {
     all: ["episodes"] as const,
     list: () => [...queryKeys.episodes.all, "list"] as const,

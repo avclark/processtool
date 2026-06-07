@@ -13,6 +13,10 @@ import {
 } from "@/lib/mutations/task-templates";
 import { AssignmentTab } from "@/components/processes/assignment-tab";
 import { BlocksTab } from "@/components/processes/blocks-tab";
+import { VisibilityTab } from "@/components/processes/visibility-tab";
+import { DependenciesTab } from "@/components/processes/dependencies-tab";
+import { DatesTab } from "@/components/processes/dates-tab";
+import { ActionsTab } from "@/components/processes/actions-tab";
 import type { Database } from "@/lib/database.types";
 
 type TaskTemplate = Database["public"]["Tables"]["task_templates"]["Row"];
@@ -150,12 +154,28 @@ export function TaskCard({ processId, template }: TaskCardProps) {
             <TabsList>
               <TabsTrigger value="content">Content</TabsTrigger>
               <TabsTrigger value="assignment">Assignment</TabsTrigger>
+              <TabsTrigger value="visibility">Visibility</TabsTrigger>
+              <TabsTrigger value="dependencies">Dependencies</TabsTrigger>
+              <TabsTrigger value="dates">Dates</TabsTrigger>
+              <TabsTrigger value="actions">Actions</TabsTrigger>
             </TabsList>
             <TabsContent value="content">
               <BlocksTab templateId={template.id} />
             </TabsContent>
             <TabsContent value="assignment">
               <AssignmentTab processId={processId} template={template} />
+            </TabsContent>
+            <TabsContent value="visibility">
+              <VisibilityTab processId={processId} template={template} />
+            </TabsContent>
+            <TabsContent value="dependencies">
+              <DependenciesTab processId={processId} template={template} />
+            </TabsContent>
+            <TabsContent value="dates">
+              <DatesTab processId={processId} template={template} />
+            </TabsContent>
+            <TabsContent value="actions">
+              <ActionsTab templateId={template.id} />
             </TabsContent>
           </Tabs>
         </div>
