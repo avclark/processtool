@@ -1,7 +1,9 @@
+import * as React from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useProcesses } from "@/lib/queries/processes";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { ProcessFormDialog } from "@/components/processes/process-form-dialog";
 
 export const Route = createFileRoute("/_shell/processes/")({
   component: ProcessesPage,
@@ -9,6 +11,7 @@ export const Route = createFileRoute("/_shell/processes/")({
 
 function ProcessesPage() {
   const { data, isLoading, error } = useProcesses();
+  const [createOpen, setCreateOpen] = React.useState(false);
 
   return (
     <>
@@ -18,9 +21,11 @@ function ProcessesPage() {
             <h1>Processes</h1>
             <p className="mt-1">Reusable task templates for episodes.</p>
           </div>
-          <Button disabled>New Process</Button>
+          <Button onClick={() => setCreateOpen(true)}>New Process</Button>
         </div>
       </div>
+
+      <ProcessFormDialog open={createOpen} onOpenChange={setCreateOpen} />
 
       <div className="mt-6">
         {isLoading && (

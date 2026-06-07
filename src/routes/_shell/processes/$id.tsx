@@ -1,17 +1,30 @@
-import { createFileRoute } from "@tanstack/react-router";
+import * as React from "react";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { processQueryOptions, useProcess } from "@/lib/queries/processes";
-import { DataTable, DataRow } from "@/components/ui/data-table";
-import { Badge } from "@/components/ui/badge";
+import { taskTemplatesByProcessQueryOptions } from "@/lib/queries/task-templates";
+import { Button } from "@/components/ui/button";
+import { ProcessBuilder } from "@/components/processes/process-builder";
+import { ProcessFormDialog } from "@/components/processes/process-form-dialog";
+import { DeleteProcessDialog } from "@/components/processes/delete-process-dialog";
 
 export const Route = createFileRoute("/_shell/processes/$id")({
   loader: ({ context, params }) =>
-    context.queryClient.ensureQueryData(processQueryOptions(params.id)),
+    Promise.all([
+      context.queryClient.ensureQueryData(processQueryOptions(params.id)),
+      context.queryClient.ensureQueryData(
+        taskTemplatesByProcessQueryOptions(params.id),
+      ),
+    ]),
   component: ProcessDetailPage,
 });
 
 function ProcessDetailPage() {
   const { id } = Route.useParams();
+  const navigate = useNavigate();
   const { data, isLoading, error } = useProcess(id);
+
+  const [editOpen, setEditOpen] = React.useState(false);
+  const [deleteOpen, setDeleteOpen] = React.useState(false);
 
   if (isLoading) return <p className="text-sm text-ink-muted">Loading...</p>;
   if (error)
@@ -23,52 +36,42 @@ function ProcessDetailPage() {
   if (!data)
     return <p className="text-sm text-ink-muted">Process not found.</p>;
 
-  const templates = data.task_templates ?? [];
-
   return (
     <>
       <div className="border-b border-hairline pb-6">
-        <h1>{data.name}</h1>
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+          <div>
+            <h1>{data.name}</h1>
+            <p className="mt-1 text-sm text-ink-muted">
+              Build the task templates for this process.
+            </p>
+          </div>
+          <div className="flex items-center gap-2">
+            <Button variant="secondary" onClick={() => setEditOpen(true)}>
+              Rename
+            </Button>
+            <Button variant="danger" onClick={() => setDeleteOpen(true)}>
+              Delete
+            </Button>
+          </div>
+        </div>
       </div>
 
       <div className="mt-6">
-        <DataTable>
-          <DataRow title="Name">{data.name}</DataRow>
-          <DataRow title="Created">
-            {new Date(data.created_at).toLocaleDateString()}
-          </DataRow>
-          <DataRow title="Updated">
-            {new Date(data.updated_at).toLocaleDateString()}
-          </DataRow>
-        </DataTable>
+        <ProcessBuilder processId={id} />
       </div>
 
-      <div className="mt-8">
-        <h2>
-          Task Templates{" "}
-          <Badge tone="neutral">{templates.length}</Badge>
-        </h2>
-        {templates.length === 0 ? (
-          <p className="mt-2 text-sm text-ink-muted">
-            No task templates defined.
-          </p>
-        ) : (
-          <ul className="mt-4 divide-y divide-hairline overflow-hidden rounded-md border border-hairline bg-page">
-            {templates
-              .sort((a, b) => a.position - b.position)
-              .map((t) => (
-                <li key={t.id} className="px-4 py-3">
-                  <div className="flex items-center gap-3 text-sm">
-                    <span className="text-ink-muted">
-                      {t.position}.
-                    </span>
-                    <span className="text-ink-display">{t.title}</span>
-                  </div>
-                </li>
-              ))}
-          </ul>
-        )}
-      </div>
+      <ProcessFormDialog
+        open={editOpen}
+        onOpenChange={setEditOpen}
+        process={{ id: data.id, name: data.name }}
+      />
+      <DeleteProcessDialog
+        open={deleteOpen}
+        onOpenChange={setDeleteOpen}
+        process={{ id: data.id, name: data.name }}
+        onDeleted={() => navigate({ to: "/processes" })}
+      />
     </>
   );
 }

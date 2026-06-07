@@ -39,6 +39,7 @@ const NAV: NavGroup[] = [
       { id: "dropdown-menu", label: "Dropdown menu" },
       { id: "callout", label: "Callout" },
       { id: "toast", label: "Toast" },
+      { id: "tabs", label: "Tabs" },
     ],
   },
   {

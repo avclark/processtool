@@ -48,8 +48,32 @@ export function episodeCountByShowQueryOptions(showId: string) {
   });
 }
 
+// Count of episodes referencing a process. Gates process deletion — the FK
+// episodes.process_id → processes is ON DELETE CASCADE, so this is a data-loss
+// guard, not just a workflow-integrity one.
+export function episodeCountByProcessQueryOptions(processId: string) {
+  return queryOptions({
+    queryKey: queryKeys.episodes.countByProcess(processId),
+    queryFn: async () => {
+      const { count, error } = await supabase
+        .from("episodes")
+        .select("id", { count: "exact", head: true })
+        .eq("process_id", processId);
+      if (error) throw error;
+      return count ?? 0;
+    },
+  });
+}
+
 export function useEpisodes() {
   return useQuery(episodesQueryOptions);
+}
+
+export function useEpisodeCountByProcess(processId: string, enabled = true) {
+  return useQuery({
+    ...episodeCountByProcessQueryOptions(processId),
+    enabled,
+  });
 }
 
 export function useEpisodeCountByShow(showId: string, enabled = true) {

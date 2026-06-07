@@ -237,6 +237,23 @@
   .callout-signal { @apply bg-signal-faded; }
   .callout-danger { @apply bg-danger-faded; }
 
+  /* Tabs */
+  .tabs-list {
+    @apply flex flex-wrap items-center gap-1 border-b border-hairline;
+  }
+  .tab-trigger {
+    @apply -mb-px cursor-pointer border-b-2 border-transparent px-3 py-2 text-sm font-medium text-ink-muted transition-colors;
+    @apply hover:text-ink-display;
+    @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-inset;
+    @apply disabled:pointer-events-none disabled:opacity-50;
+  }
+  .tab-trigger[data-state="active"] {
+    @apply border-accent text-accent-display;
+  }
+  .tab-content {
+    @apply pt-4 focus-visible:outline-none;
+  }
+
   /* Toast (notifications) */
   .toast-viewport {
     @apply fixed bottom-0 right-0 z-60 m-0 flex w-full max-w-sm list-none flex-col gap-2 p-4 outline-none;

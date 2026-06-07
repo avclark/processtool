@@ -20,11 +20,24 @@ export const queryKeys = {
     all: ["workflows"] as const,
     list: () => [...queryKeys.workflows.all, "list"] as const,
     detail: (id: string) => [...queryKeys.workflows.all, id] as const,
+    countByProcess: (processId: string) =>
+      [...queryKeys.workflows.all, "countByProcess", processId] as const,
   },
   processes: {
     all: ["processes"] as const,
     list: () => [...queryKeys.processes.all, "list"] as const,
     detail: (id: string) => [...queryKeys.processes.all, id] as const,
+  },
+  taskTemplates: {
+    all: ["taskTemplates"] as const,
+    byProcess: (processId: string) =>
+      [...queryKeys.taskTemplates.all, "byProcess", processId] as const,
+    detail: (id: string) => [...queryKeys.taskTemplates.all, id] as const,
+  },
+  taskTemplateBlocks: {
+    all: ["taskTemplateBlocks"] as const,
+    byTemplate: (templateId: string) =>
+      [...queryKeys.taskTemplateBlocks.all, templateId] as const,
   },
   episodes: {
     all: ["episodes"] as const,
@@ -32,6 +45,8 @@ export const queryKeys = {
     detail: (id: string) => [...queryKeys.episodes.all, id] as const,
     countByShow: (showId: string) =>
       [...queryKeys.episodes.all, "countByShow", showId] as const,
+    countByProcess: (processId: string) =>
+      [...queryKeys.episodes.all, "countByProcess", processId] as const,
   },
   users: {
     all: ["users"] as const,

@@ -23,7 +23,7 @@ export function processQueryOptions(id: string) {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("processes")
-        .select("*, task_templates(id, title, position)")
+        .select("*")
         .eq("id", id)
         .single();
       if (error) throw error;
