@@ -10,6 +10,7 @@ import { usePeople } from "@/lib/queries/people";
 import {
   useRenameTaskTemplate,
   useDeleteTaskTemplate,
+  useDuplicateTaskTemplate,
 } from "@/lib/mutations/task-templates";
 import { AssignmentTab } from "@/components/processes/assignment-tab";
 import { BlocksTab } from "@/components/processes/blocks-tab";
@@ -56,20 +57,12 @@ function TaskCardImpl({ processId, template, handleProps }: TaskCardProps) {
   const people = usePeople();
   const renameTask = useRenameTaskTemplate(processId);
   const deleteTask = useDeleteTaskTemplate(processId);
+  const duplicateTask = useDuplicateTaskTemplate(processId);
 
   const [expanded, setExpanded] = React.useState(false);
   const [editing, setEditing] = React.useState(false);
   const [titleDraft, setTitleDraft] = React.useState(template.title);
   const [confirmingDelete, setConfirmingDelete] = React.useState(false);
-
-  // TEMP INSTRUMENTATION (Phase 6 DnD debug) — remove after diagnosis.
-  const renderCount = React.useRef(0);
-  renderCount.current += 1;
-  console.log("[render] task", {
-    title: template.title,
-    position: template.position,
-    count: renderCount.current,
-  });
 
   const assignmentLabel = getAssignmentLabel(
     template,
@@ -155,6 +148,16 @@ function TaskCardImpl({ processId, template, handleProps }: TaskCardProps) {
               }}
             >
               <Pencil className="h-4 w-4" />
+            </Button>
+            {/* Phase 9: also trigger duplicate from the command palette. */}
+            <Button
+              type="button"
+              size="sm"
+              variant="ghost"
+              disabled={duplicateTask.isPending}
+              onClick={() => duplicateTask.mutate({ templateId: template.id })}
+            >
+              Duplicate
             </Button>
             {confirmingDelete ? (
               <>

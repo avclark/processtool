@@ -1,10 +1,15 @@
 import * as React from "react";
-import { Settings2 } from "lucide-react";
+import { GripVertical, Settings2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Select } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { useTaskTemplateBlocks } from "@/lib/queries/task-template-blocks";
 import { useSaveBlocks } from "@/lib/mutations/task-template-blocks";
+import {
+  SortableList,
+  useSortableItem,
+  arrayMove,
+} from "@/components/processes/sortable";
 import {
   BlockSettingsDialog,
   BLOCK_TYPES,
@@ -82,42 +87,32 @@ export function BlocksTab({ templateId }: BlocksTabProps) {
       {draft.length === 0 ? (
         <p className="text-sm text-ink-muted">No blocks yet. Add one below.</p>
       ) : (
-        <ul className="divide-y divide-hairline overflow-hidden rounded-md border border-hairline bg-page">
-          {draft.map((block) => (
-            <li
-              key={block.key}
-              className="flex items-center gap-3 px-3 py-2.5"
-            >
-              <Badge tone="muted">{blockTypeLabel(block.block_type)}</Badge>
-              <span className="min-w-0 flex-1 truncate text-sm text-ink-display">
-                {block.label || (
-                  <span className="text-ink-muted italic">(no label)</span>
-                )}
-              </span>
-              {block.required && <Badge tone="signal">Required</Badge>}
-              <Button
-                type="button"
-                size="icon"
-                variant="ghost"
-                aria-label="Block settings"
-                onClick={() => {
+        <SortableList
+          ids={draft.map((b) => b.key)}
+          // Reorder updates the local draft only — persisted by "Save blocks"
+          // (the replace-all save writes display_order by array index).
+          onReorder={(oldIndex, newIndex) =>
+            setDraft((prev) => arrayMove(prev, oldIndex, newIndex))
+          }
+          renderOverlay={(key) => {
+            const b = draft.find((x) => x.key === key);
+            return b ? <BlockRowOverlay block={b} /> : null;
+          }}
+        >
+          <ul className="divide-y divide-hairline overflow-hidden rounded-md border border-hairline bg-page">
+            {draft.map((block) => (
+              <SortableBlockRow
+                key={block.key}
+                block={block}
+                onEdit={() => {
                   setEditingKey(block.key);
                   setDialogOpen(true);
                 }}
-              >
-                <Settings2 className="h-4 w-4" />
-              </Button>
-              <Button
-                type="button"
-                size="sm"
-                variant="ghost"
-                onClick={() => removeBlock(block.key)}
-              >
-                Delete
-              </Button>
-            </li>
-          ))}
-        </ul>
+                onRemove={() => removeBlock(block.key)}
+              />
+            ))}
+          </ul>
+        </SortableList>
       )}
 
       <div className="flex flex-wrap items-center gap-3">
@@ -167,4 +162,65 @@ function toDraft(b: {
       : null,
     token_name: b.token_name,
   };
+}
+
+function SortableBlockRow({
+  block,
+  onEdit,
+  onRemove,
+}: {
+  block: DraftBlock;
+  onEdit: () => void;
+  onRemove: () => void;
+}) {
+  const { setNodeRef, style, handleProps } = useSortableItem(block.key);
+  return (
+    <li
+      ref={setNodeRef}
+      style={style}
+      className="flex items-center gap-3 px-3 py-2.5"
+    >
+      <button
+        type="button"
+        {...handleProps}
+        aria-label="Drag to reorder"
+        className="cursor-grab touch-none text-ink-muted hover:text-ink-display active:cursor-grabbing"
+      >
+        <GripVertical className="h-4 w-4" />
+      </button>
+      <Badge tone="muted">{blockTypeLabel(block.block_type)}</Badge>
+      <span className="min-w-0 flex-1 truncate text-sm text-ink-display">
+        {block.label || (
+          <span className="text-ink-muted italic">(no label)</span>
+        )}
+      </span>
+      {block.required && <Badge tone="signal">Required</Badge>}
+      <Button
+        type="button"
+        size="icon"
+        variant="ghost"
+        aria-label="Block settings"
+        onClick={onEdit}
+      >
+        <Settings2 className="h-4 w-4" />
+      </Button>
+      <Button type="button" size="sm" variant="ghost" onClick={onRemove}>
+        Delete
+      </Button>
+    </li>
+  );
+}
+
+// Presentation rendered in the DragOverlay while dragging a block.
+function BlockRowOverlay({ block }: { block: DraftBlock }) {
+  return (
+    <div className="flex items-center gap-3 rounded-md border border-hairline bg-page px-3 py-2.5 shadow-lg">
+      <GripVertical className="h-4 w-4 text-ink-muted" />
+      <Badge tone="muted">{blockTypeLabel(block.block_type)}</Badge>
+      <span className="min-w-0 flex-1 truncate text-sm text-ink-display">
+        {block.label || "(no label)"}
+      </span>
+      {block.required && <Badge tone="signal">Required</Badge>}
+    </div>
+  );
 }

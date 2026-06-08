@@ -53,19 +53,9 @@ export function SortableList({
   function handleDragEnd(event: DragEndEvent) {
     setActiveId(null);
     const { active, over } = event;
-    // TEMP INSTRUMENTATION (Phase 6 DnD debug) — remove after diagnosis.
-    const oldIndex = over ? ids.indexOf(active.id as string) : -1;
-    const newIndex = over ? ids.indexOf(over.id as string) : -1;
-    console.log("[dnd] dragEnd", {
-      activeId: active.id,
-      overId: over?.id ?? null,
-      oldIndex,
-      newIndex,
-      direction:
-        newIndex > oldIndex ? "DOWN" : newIndex < oldIndex ? "UP" : "none",
-      ids: [...ids],
-    });
     if (over && active.id !== over.id) {
+      const oldIndex = ids.indexOf(active.id as string);
+      const newIndex = ids.indexOf(over.id as string);
       if (oldIndex !== -1 && newIndex !== -1) onReorder(oldIndex, newIndex);
     }
   }

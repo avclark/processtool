@@ -35,10 +35,7 @@ export function ProcessBuilder({ processId }: ProcessBuilderProps) {
   );
 
   function handleReorder(oldIndex: number, newIndex: number) {
-    const after = arrayMove(ids, oldIndex, newIndex);
-    // TEMP INSTRUMENTATION (Phase 6 DnD debug) — remove after diagnosis.
-    console.log("[dnd] reorder", { oldIndex, newIndex, before: [...ids], after });
-    reorder.mutate(after);
+    reorder.mutate(arrayMove(ids, oldIndex, newIndex));
   }
 
   function handleAdd(e: React.FormEvent) {
