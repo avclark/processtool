@@ -2,8 +2,15 @@ import * as React from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useTaskTemplates } from "@/lib/queries/task-templates";
-import { useCreateTaskTemplate } from "@/lib/mutations/task-templates";
-import { TaskCard } from "@/components/processes/task-card";
+import {
+  useCreateTaskTemplate,
+  useReorderTaskTemplates,
+} from "@/lib/mutations/task-templates";
+import {
+  SortableTaskRow,
+  TaskCardOverlay,
+} from "@/components/processes/task-card";
+import { SortableList, arrayMove } from "@/components/processes/sortable";
 
 interface ProcessBuilderProps {
   processId: string;
@@ -12,7 +19,27 @@ interface ProcessBuilderProps {
 export function ProcessBuilder({ processId }: ProcessBuilderProps) {
   const { data, isLoading, error } = useTaskTemplates(processId);
   const createTask = useCreateTaskTemplate(processId);
+  const reorder = useReorderTaskTemplates(processId);
   const [newTitle, setNewTitle] = React.useState("");
+
+  // Stable identity for SortableContext's `items`: only changes when the order
+  // actually changes (the drop), NOT on incidental re-renders (e.g. the
+  // mutation's pending→settled toggle). A fresh `data.map()` every render would
+  // make dnd-kit re-measure and replay a layout animation on those incidental
+  // renders, producing a spurious secondary move/flash after the drop. This
+  // matches the official dnd-kit pattern of passing a referentially-stable items.
+  const ids = React.useMemo(() => (data ?? []).map((t) => t.id), [data]);
+  const byId = React.useMemo(
+    () => new Map((data ?? []).map((t) => [t.id, t])),
+    [data],
+  );
+
+  function handleReorder(oldIndex: number, newIndex: number) {
+    const after = arrayMove(ids, oldIndex, newIndex);
+    // TEMP INSTRUMENTATION (Phase 6 DnD debug) — remove after diagnosis.
+    console.log("[dnd] reorder", { oldIndex, newIndex, before: [...ids], after });
+    reorder.mutate(after);
+  }
 
   function handleAdd(e: React.FormEvent) {
     e.preventDefault();
@@ -40,15 +67,24 @@ export function ProcessBuilder({ processId }: ProcessBuilderProps) {
       )}
 
       {data && data.length > 0 && (
-        <ul className="divide-y divide-hairline overflow-hidden rounded-md border border-hairline bg-page">
-          {data.map((template) => (
-            <TaskCard
-              key={template.id}
-              processId={processId}
-              template={template}
-            />
-          ))}
-        </ul>
+        <SortableList
+          ids={ids}
+          onReorder={handleReorder}
+          renderOverlay={(id) => {
+            const t = byId.get(id);
+            return t ? <TaskCardOverlay template={t} /> : null;
+          }}
+        >
+          <ul className="divide-y divide-hairline overflow-hidden rounded-md border border-hairline bg-page">
+            {data.map((template) => (
+              <SortableTaskRow
+                key={template.id}
+                processId={processId}
+                template={template}
+              />
+            ))}
+          </ul>
+        </SortableList>
       )}
 
       <form onSubmit={handleAdd} className="flex items-end gap-2">

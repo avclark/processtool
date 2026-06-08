@@ -1,0 +1,110 @@
+The overlap/layering fix worked — thank you. The hidden-source approach is fine, I'm OK with the clean empty gap (no need for a placeholder). One new minor bug, with a very specific trigger:
+
+ONLY on the FIRST drag after a page refresh: on drop, the text of all the passed-over cards flashes (same text-flash we saw earlier). It happens on both up and down drags, but ONLY the first drag after a refresh. Every subsequent drag — up or down, any card — is completely clean. So it's first-interaction-after-load specific.
+
+This pattern (broken only on first use after load, fine thereafter) strongly suggests something lazy/cold on first interaction: a query or derived value that isn't warm/settled until the first drag triggers it, causing an extra refetch or recompute that re-renders the passed-over cards with a flash — then it's cached/warm for all later drags.
+
+I'm including two console dumps from the render instrumentation:
+- FIRST DRAG (flashes): [dump]
+- SECOND DRAG (clean): [dump]
+
+Compare them — the first-drag dump should show extra renders / an extra invalidation or refetch on the passed-over cards that the second-drag dump doesn't. Diagnose what's cold on first interaction (likely a query that's stale/refetching on first drag, or onSettled invalidation firing only when the cache is cold). Fix so the first drag after refresh is as clean as subsequent ones — without reintroducing render churn (keep the split SortableTaskRow / memoized TaskCard) and without a constant refetch. Report the cause before fixing.
+
+===== FIRST DRAG (flashes) =====
+
+Download the Apollo DevTools for a better development experience: https://chrome.google.com/webstore/detail/apollo-client-developer-t/jdkknkkbebbapilgoeccciglkfbmbnfm
+__root.tsx:38 LOG Go to Source: http://localhost:3000/__tsd/open-source?source=%2Fsrc%2Fcomponents%2Fprocesses%2Ftask-card.tsx%3A68%3A3  →  [render] task {title: 'Download from Riverside', position: 0, count: 3}
+__root.tsx:38 LOG Go to Source: http://localhost:3000/__tsd/open-source?source=%2Fsrc%2Fcomponents%2Fprocesses%2Ftask-card.tsx%3A68%3A3  →  [render] task {title: 'Edit Video', position: 1, count: 3}
+__root.tsx:38 LOG Go to Source: http://localhost:3000/__tsd/open-source?source=%2Fsrc%2Fcomponents%2Fprocesses%2Ftask-card.tsx%3A68%3A3  →  [render] task {title: 'Edit Audio', position: 2, count: 3}
+__root.tsx:38 LOG Go to Source: http://localhost:3000/__tsd/open-source?source=%2Fsrc%2Fcomponents%2Fprocesses%2Ftask-card.tsx%3A68%3A3  →  [render] task {title: 'Task assigned to Cherre', position: 3, count: 3}
+__root.tsx:38 LOG Go to Source: http://localhost:3000/__tsd/open-source?source=%2Fsrc%2Fcomponents%2Fprocesses%2Ftask-card.tsx%3A68%3A3  →  [render] task {title: 'Write Shownotes', position: 4, count: 3}
+__root.tsx:38 LOG Go to Source: http://localhost:3000/__tsd/open-source?source=%2Fsrc%2Fcomponents%2Fprocesses%2Ftask-card.tsx%3A68%3A3  →  [render] task {title: 'Unassigned Task', position: 5, count: 3}
+__root.tsx:38 LOG Go to Source: http://localhost:3000/__tsd/open-source?source=%2Fsrc%2Fcomponents%2Fprocesses%2Ftask-card.tsx%3A68%3A3  →  [render] task {title: 'QA Shownotes', position: 6, count: 3}
+__root.tsx:38 LOG Go to Source: http://localhost:3000/__tsd/open-source?source=%2Fsrc%2Fcomponents%2Fprocesses%2Ftask-card.tsx%3A68%3A3  →  [render] task {title: 'Create Social Assets', position: 7, count: 3}
+__root.tsx:38 LOG Go to Source: http://localhost:3000/__tsd/open-source?source=%2Fsrc%2Fcomponents%2Fprocesses%2Ftask-card.tsx%3A68%3A3  →  [render] task {title: 'Send Links to Client', position: 8, count: 3}
+__root.tsx:38 LOG Go to Source: http://localhost:3000/__tsd/open-source?source=%2Fsrc%2Fcomponents%2Fprocesses%2Ftask-card.tsx%3A68%3A3  →  [render] task {title: 'Create Social Assets (not empty)', position: 9, count: 3}
+__root.tsx:38 LOG Go to Source: http://localhost:3000/__tsd/open-source?source=%2Fsrc%2Fcomponents%2Fprocesses%2Ftask-card.tsx%3A68%3A3  →  [render] task {title: 'Send links to client (not empty)', position: 10, count: 3}
+__root.tsx:38 LOG Go to Source: http://localhost:3000/__tsd/open-source?source=%2Fsrc%2Fcomponents%2Fprocesses%2Fsortable.tsx%3A59%3A5  →  [dnd] dragEnd {activeId: '9b8c787e-da54-4d91-9894-77721e81ac2a', overId: '7a66ea76-a7bd-4fc4-9e41-9500638a7c58', oldIndex: 0, newIndex: 2, direction: 'DOWN', …}
+__root.tsx:38 LOG Go to Source: http://localhost:3000/__tsd/open-source?source=%2Fsrc%2Fcomponents%2Fprocesses%2Fprocess-builder.tsx%3A40%3A5  →  [dnd] reorder {oldIndex: 0, newIndex: 2, before: Array(11), after: Array(11)}
+__root.tsx:38 LOG Go to Source: http://localhost:3000/__tsd/open-source?source=%2Fsrc%2Fcomponents%2Fprocesses%2Ftask-card.tsx%3A68%3A3  →  [render] task {title: 'Download from Riverside', position: 0, count: 4}
+__root.tsx:38 LOG Go to Source: http://localhost:3000/__tsd/open-source?source=%2Fsrc%2Fcomponents%2Fprocesses%2Ftask-card.tsx%3A68%3A3  →  [render] task {title: 'Edit Video', position: 1, count: 4}
+__root.tsx:38 LOG Go to Source: http://localhost:3000/__tsd/open-source?source=%2Fsrc%2Fcomponents%2Fprocesses%2Ftask-card.tsx%3A68%3A3  →  [render] task {title: 'Edit Audio', position: 2, count: 4}
+__root.tsx:38 LOG Go to Source: http://localhost:3000/__tsd/open-source?source=%2Fsrc%2Fcomponents%2Fprocesses%2Ftask-card.tsx%3A68%3A3  →  [render] task {title: 'Task assigned to Cherre', position: 3, count: 4}
+__root.tsx:38 LOG Go to Source: http://localhost:3000/__tsd/open-source?source=%2Fsrc%2Fcomponents%2Fprocesses%2Ftask-card.tsx%3A68%3A3  →  [render] task {title: 'Write Shownotes', position: 4, count: 4}
+__root.tsx:38 LOG Go to Source: http://localhost:3000/__tsd/open-source?source=%2Fsrc%2Fcomponents%2Fprocesses%2Ftask-card.tsx%3A68%3A3  →  [render] task {title: 'Unassigned Task', position: 5, count: 4}
+__root.tsx:38 LOG Go to Source: http://localhost:3000/__tsd/open-source?source=%2Fsrc%2Fcomponents%2Fprocesses%2Ftask-card.tsx%3A68%3A3  →  [render] task {title: 'QA Shownotes', position: 6, count: 4}
+__root.tsx:38 LOG Go to Source: http://localhost:3000/__tsd/open-source?source=%2Fsrc%2Fcomponents%2Fprocesses%2Ftask-card.tsx%3A68%3A3  →  [render] task {title: 'Create Social Assets', position: 7, count: 4}
+__root.tsx:38 LOG Go to Source: http://localhost:3000/__tsd/open-source?source=%2Fsrc%2Fcomponents%2Fprocesses%2Ftask-card.tsx%3A68%3A3  →  [render] task {title: 'Send Links to Client', position: 8, count: 4}
+__root.tsx:38 LOG Go to Source: http://localhost:3000/__tsd/open-source?source=%2Fsrc%2Fcomponents%2Fprocesses%2Ftask-card.tsx%3A68%3A3  →  [render] task {title: 'Create Social Assets (not empty)', position: 9, count: 4}
+__root.tsx:38 LOG Go to Source: http://localhost:3000/__tsd/open-source?source=%2Fsrc%2Fcomponents%2Fprocesses%2Ftask-card.tsx%3A68%3A3  →  [render] task {title: 'Send links to client (not empty)', position: 10, count: 4}
+__root.tsx:38 LOG Go to Source: http://localhost:3000/__tsd/open-source?source=%2Fsrc%2Fcomponents%2Fprocesses%2Ftask-card.tsx%3A68%3A3  →  [render] task {title: 'Edit Video', position: 0, count: 5}
+__root.tsx:38 LOG Go to Source: http://localhost:3000/__tsd/open-source?source=%2Fsrc%2Fcomponents%2Fprocesses%2Ftask-card.tsx%3A68%3A3  →  [render] task {title: 'Edit Audio', position: 1, count: 5}
+__root.tsx:38 LOG Go to Source: http://localhost:3000/__tsd/open-source?source=%2Fsrc%2Fcomponents%2Fprocesses%2Ftask-card.tsx%3A68%3A3  →  [render] task {title: 'Download from Riverside', position: 2, count: 5}
+__root.tsx:38 LOG Go to Source: http://localhost:3000/__tsd/open-source?source=%2Fsrc%2Fcomponents%2Fprocesses%2Ftask-card.tsx%3A68%3A3  →  [render] task {title: 'Task assigned to Cherre', position: 3, count: 5}
+__root.tsx:38 LOG Go to Source: http://localhost:3000/__tsd/open-source?source=%2Fsrc%2Fcomponents%2Fprocesses%2Ftask-card.tsx%3A68%3A3  →  [render] task {title: 'Write Shownotes', position: 4, count: 5}
+__root.tsx:38 LOG Go to Source: http://localhost:3000/__tsd/open-source?source=%2Fsrc%2Fcomponents%2Fprocesses%2Ftask-card.tsx%3A68%3A3  →  [render] task {title: 'Unassigned Task', position: 5, count: 5}
+__root.tsx:38 LOG Go to Source: http://localhost:3000/__tsd/open-source?source=%2Fsrc%2Fcomponents%2Fprocesses%2Ftask-card.tsx%3A68%3A3  →  [render] task {title: 'QA Shownotes', position: 6, count: 5}
+__root.tsx:38 LOG Go to Source: http://localhost:3000/__tsd/open-source?source=%2Fsrc%2Fcomponents%2Fprocesses%2Ftask-card.tsx%3A68%3A3  →  [render] task {title: 'Create Social Assets', position: 7, count: 5}
+__root.tsx:38 LOG Go to Source: http://localhost:3000/__tsd/open-source?source=%2Fsrc%2Fcomponents%2Fprocesses%2Ftask-card.tsx%3A68%3A3  →  [render] task {title: 'Send Links to Client', position: 8, count: 5}
+__root.tsx:38 LOG Go to Source: http://localhost:3000/__tsd/open-source?source=%2Fsrc%2Fcomponents%2Fprocesses%2Ftask-card.tsx%3A68%3A3  →  [render] task {title: 'Create Social Assets (not empty)', position: 9, count: 5}
+__root.tsx:38 LOG Go to Source: http://localhost:3000/__tsd/open-source?source=%2Fsrc%2Fcomponents%2Fprocesses%2Ftask-card.tsx%3A68%3A3  →  [render] task {title: 'Send links to client (not empty)', position: 10, count: 5}
+__root.tsx:38 LOG Go to Source: http://localhost:3000/__tsd/open-source?source=%2Fsrc%2Fcomponents%2Fprocesses%2Ftask-card.tsx%3A68%3A3  →  [render] task {title: 'Edit Video', position: 0, count: 6}
+__root.tsx:38 LOG Go to Source: http://localhost:3000/__tsd/open-source?source=%2Fsrc%2Fcomponents%2Fprocesses%2Ftask-card.tsx%3A68%3A3  →  [render] task {title: 'Edit Audio', position: 1, count: 6}
+__root.tsx:38 LOG Go to Source: http://localhost:3000/__tsd/open-source?source=%2Fsrc%2Fcomponents%2Fprocesses%2Ftask-card.tsx%3A68%3A3  →  [render] task {title: 'Download from Riverside', position: 2, count: 6}
+__root.tsx:38 LOG Go to Source: http://localhost:3000/__tsd/open-source?source=%2Fsrc%2Fcomponents%2Fprocesses%2Ftask-card.tsx%3A68%3A3  →  [render] task {title: 'Task assigned to Cherre', position: 3, count: 6}
+__root.tsx:38 LOG Go to Source: http://localhost:3000/__tsd/open-source?source=%2Fsrc%2Fcomponents%2Fprocesses%2Ftask-card.tsx%3A68%3A3  →  [render] task {title: 'Write Shownotes', position: 4, count: 6}
+__root.tsx:38 LOG Go to Source: http://localhost:3000/__tsd/open-source?source=%2Fsrc%2Fcomponents%2Fprocesses%2Ftask-card.tsx%3A68%3A3  →  [render] task {title: 'Unassigned Task', position: 5, count: 6}
+__root.tsx:38 LOG Go to Source: http://localhost:3000/__tsd/open-source?source=%2Fsrc%2Fcomponents%2Fprocesses%2Ftask-card.tsx%3A68%3A3  →  [render] task {title: 'QA Shownotes', position: 6, count: 6}
+__root.tsx:38 LOG Go to Source: http://localhost:3000/__tsd/open-source?source=%2Fsrc%2Fcomponents%2Fprocesses%2Ftask-card.tsx%3A68%3A3  →  [render] task {title: 'Create Social Assets', position: 7, count: 6}
+__root.tsx:38 LOG Go to Source: http://localhost:3000/__tsd/open-source?source=%2Fsrc%2Fcomponents%2Fprocesses%2Ftask-card.tsx%3A68%3A3  →  [render] task {title: 'Send Links to Client', position: 8, count: 6}
+__root.tsx:38 LOG Go to Source: http://localhost:3000/__tsd/open-source?source=%2Fsrc%2Fcomponents%2Fprocesses%2Ftask-card.tsx%3A68%3A3  →  [render] task {title: 'Create Social Assets (not empty)', position: 9, count: 6}
+__root.tsx:38 LOG Go to Source: http://localhost:3000/__tsd/open-source?source=%2Fsrc%2Fcomponents%2Fprocesses%2Ftask-card.tsx%3A68%3A3  →  [render] task {title: 'Send links to client (not empty)', position: 10, count: 6}
+
+===== SECOND DRAG (clean) =====
+
+LOG Go to Source: http://localhost:3000/__tsd/open-source?source=%2Fsrc%2Fcomponents%2Fprocesses%2Ftask-card.tsx%3A68%3A3  →  [render] task {title: 'Download from Riverside', position: 0, count: 7}
+__root.tsx:38 LOG Go to Source: http://localhost:3000/__tsd/open-source?source=%2Fsrc%2Fcomponents%2Fprocesses%2Ftask-card.tsx%3A68%3A3  →  [render] task {title: 'Edit Video', position: 1, count: 7}
+__root.tsx:38 LOG Go to Source: http://localhost:3000/__tsd/open-source?source=%2Fsrc%2Fcomponents%2Fprocesses%2Ftask-card.tsx%3A68%3A3  →  [render] task {title: 'Task assigned to Cherre', position: 2, count: 7}
+__root.tsx:38 LOG Go to Source: http://localhost:3000/__tsd/open-source?source=%2Fsrc%2Fcomponents%2Fprocesses%2Ftask-card.tsx%3A68%3A3  →  [render] task {title: 'Edit Audio', position: 3, count: 7}
+__root.tsx:38 LOG Go to Source: http://localhost:3000/__tsd/open-source?source=%2Fsrc%2Fcomponents%2Fprocesses%2Ftask-card.tsx%3A68%3A3  →  [render] task {title: 'Write Shownotes', position: 4, count: 7}
+__root.tsx:38 LOG Go to Source: http://localhost:3000/__tsd/open-source?source=%2Fsrc%2Fcomponents%2Fprocesses%2Ftask-card.tsx%3A68%3A3  →  [render] task {title: 'Unassigned Task', position: 5, count: 7}
+__root.tsx:38 LOG Go to Source: http://localhost:3000/__tsd/open-source?source=%2Fsrc%2Fcomponents%2Fprocesses%2Ftask-card.tsx%3A68%3A3  →  [render] task {title: 'QA Shownotes', position: 6, count: 7}
+__root.tsx:38 LOG Go to Source: http://localhost:3000/__tsd/open-source?source=%2Fsrc%2Fcomponents%2Fprocesses%2Ftask-card.tsx%3A68%3A3  →  [render] task {title: 'Create Social Assets', position: 7, count: 7}
+__root.tsx:38 LOG Go to Source: http://localhost:3000/__tsd/open-source?source=%2Fsrc%2Fcomponents%2Fprocesses%2Ftask-card.tsx%3A68%3A3  →  [render] task {title: 'Send Links to Client', position: 8, count: 7}
+__root.tsx:38 LOG Go to Source: http://localhost:3000/__tsd/open-source?source=%2Fsrc%2Fcomponents%2Fprocesses%2Ftask-card.tsx%3A68%3A3  →  [render] task {title: 'Create Social Assets (not empty)', position: 9, count: 7}
+__root.tsx:38 LOG Go to Source: http://localhost:3000/__tsd/open-source?source=%2Fsrc%2Fcomponents%2Fprocesses%2Ftask-card.tsx%3A68%3A3  →  [render] task {title: 'Send links to client (not empty)', position: 10, count: 7}
+__root.tsx:38 LOG Go to Source: http://localhost:3000/__tsd/open-source?source=%2Fsrc%2Fcomponents%2Fprocesses%2Fsortable.tsx%3A59%3A5  →  [dnd] dragEnd {activeId: 'e4211843-d0f1-479f-b405-bd6d435077aa', overId: '087af43f-b3dd-4fe7-bd8c-6e285d9a1e3c', oldIndex: 2, newIndex: 4, direction: 'DOWN', …}
+__root.tsx:38 LOG Go to Source: http://localhost:3000/__tsd/open-source?source=%2Fsrc%2Fcomponents%2Fprocesses%2Fprocess-builder.tsx%3A40%3A5  →  [dnd] reorder {oldIndex: 2, newIndex: 4, before: Array(11), after: Array(11)}
+__root.tsx:38 LOG Go to Source: http://localhost:3000/__tsd/open-source?source=%2Fsrc%2Fcomponents%2Fprocesses%2Ftask-card.tsx%3A68%3A3  →  [render] task {title: 'Download from Riverside', position: 0, count: 8}
+__root.tsx:38 LOG Go to Source: http://localhost:3000/__tsd/open-source?source=%2Fsrc%2Fcomponents%2Fprocesses%2Ftask-card.tsx%3A68%3A3  →  [render] task {title: 'Edit Video', position: 1, count: 8}
+__root.tsx:38 LOG Go to Source: http://localhost:3000/__tsd/open-source?source=%2Fsrc%2Fcomponents%2Fprocesses%2Ftask-card.tsx%3A68%3A3  →  [render] task {title: 'Task assigned to Cherre', position: 2, count: 8}
+__root.tsx:38 LOG Go to Source: http://localhost:3000/__tsd/open-source?source=%2Fsrc%2Fcomponents%2Fprocesses%2Ftask-card.tsx%3A68%3A3  →  [render] task {title: 'Edit Audio', position: 3, count: 8}
+__root.tsx:38 LOG Go to Source: http://localhost:3000/__tsd/open-source?source=%2Fsrc%2Fcomponents%2Fprocesses%2Ftask-card.tsx%3A68%3A3  →  [render] task {title: 'Write Shownotes', position: 4, count: 8}
+__root.tsx:38 LOG Go to Source: http://localhost:3000/__tsd/open-source?source=%2Fsrc%2Fcomponents%2Fprocesses%2Ftask-card.tsx%3A68%3A3  →  [render] task {title: 'Unassigned Task', position: 5, count: 8}
+__root.tsx:38 LOG Go to Source: http://localhost:3000/__tsd/open-source?source=%2Fsrc%2Fcomponents%2Fprocesses%2Ftask-card.tsx%3A68%3A3  →  [render] task {title: 'QA Shownotes', position: 6, count: 8}
+__root.tsx:38 LOG Go to Source: http://localhost:3000/__tsd/open-source?source=%2Fsrc%2Fcomponents%2Fprocesses%2Ftask-card.tsx%3A68%3A3  →  [render] task {title: 'Create Social Assets', position: 7, count: 8}
+__root.tsx:38 LOG Go to Source: http://localhost:3000/__tsd/open-source?source=%2Fsrc%2Fcomponents%2Fprocesses%2Ftask-card.tsx%3A68%3A3  →  [render] task {title: 'Send Links to Client', position: 8, count: 8}
+__root.tsx:38 LOG Go to Source: http://localhost:3000/__tsd/open-source?source=%2Fsrc%2Fcomponents%2Fprocesses%2Ftask-card.tsx%3A68%3A3  →  [render] task {title: 'Create Social Assets (not empty)', position: 9, count: 8}
+__root.tsx:38 LOG Go to Source: http://localhost:3000/__tsd/open-source?source=%2Fsrc%2Fcomponents%2Fprocesses%2Ftask-card.tsx%3A68%3A3  →  [render] task {title: 'Send links to client (not empty)', position: 10, count: 8}
+__root.tsx:38 LOG Go to Source: http://localhost:3000/__tsd/open-source?source=%2Fsrc%2Fcomponents%2Fprocesses%2Ftask-card.tsx%3A68%3A3  →  [render] task {title: 'Download from Riverside', position: 0, count: 9}
+__root.tsx:38 LOG Go to Source: http://localhost:3000/__tsd/open-source?source=%2Fsrc%2Fcomponents%2Fprocesses%2Ftask-card.tsx%3A68%3A3  →  [render] task {title: 'Edit Video', position: 1, count: 9}
+__root.tsx:38 LOG Go to Source: http://localhost:3000/__tsd/open-source?source=%2Fsrc%2Fcomponents%2Fprocesses%2Ftask-card.tsx%3A68%3A3  →  [render] task {title: 'Edit Audio', position: 2, count: 9}
+__root.tsx:38 LOG Go to Source: http://localhost:3000/__tsd/open-source?source=%2Fsrc%2Fcomponents%2Fprocesses%2Ftask-card.tsx%3A68%3A3  →  [render] task {title: 'Write Shownotes', position: 3, count: 9}
+__root.tsx:38 LOG Go to Source: http://localhost:3000/__tsd/open-source?source=%2Fsrc%2Fcomponents%2Fprocesses%2Ftask-card.tsx%3A68%3A3  →  [render] task {title: 'Task assigned to Cherre', position: 4, count: 9}
+__root.tsx:38 LOG Go to Source: http://localhost:3000/__tsd/open-source?source=%2Fsrc%2Fcomponents%2Fprocesses%2Ftask-card.tsx%3A68%3A3  →  [render] task {title: 'Unassigned Task', position: 5, count: 9}
+__root.tsx:38 LOG Go to Source: http://localhost:3000/__tsd/open-source?source=%2Fsrc%2Fcomponents%2Fprocesses%2Ftask-card.tsx%3A68%3A3  →  [render] task {title: 'QA Shownotes', position: 6, count: 9}
+__root.tsx:38 LOG Go to Source: http://localhost:3000/__tsd/open-source?source=%2Fsrc%2Fcomponents%2Fprocesses%2Ftask-card.tsx%3A68%3A3  →  [render] task {title: 'Create Social Assets', position: 7, count: 9}
+__root.tsx:38 LOG Go to Source: http://localhost:3000/__tsd/open-source?source=%2Fsrc%2Fcomponents%2Fprocesses%2Ftask-card.tsx%3A68%3A3  →  [render] task {title: 'Send Links to Client', position: 8, count: 9}
+__root.tsx:38 LOG Go to Source: http://localhost:3000/__tsd/open-source?source=%2Fsrc%2Fcomponents%2Fprocesses%2Ftask-card.tsx%3A68%3A3  →  [render] task {title: 'Create Social Assets (not empty)', position: 9, count: 9}
+__root.tsx:38 LOG Go to Source: http://localhost:3000/__tsd/open-source?source=%2Fsrc%2Fcomponents%2Fprocesses%2Ftask-card.tsx%3A68%3A3  →  [render] task {title: 'Send links to client (not empty)', position: 10, count: 9}
+__root.tsx:38 LOG Go to Source: http://localhost:3000/__tsd/open-source?source=%2Fsrc%2Fcomponents%2Fprocesses%2Ftask-card.tsx%3A68%3A3  →  [render] task {title: 'Download from Riverside', position: 0, count: 10}
+__root.tsx:38 LOG Go to Source: http://localhost:3000/__tsd/open-source?source=%2Fsrc%2Fcomponents%2Fprocesses%2Ftask-card.tsx%3A68%3A3  →  [render] task {title: 'Edit Video', position: 1, count: 10}
+__root.tsx:38 LOG Go to Source: http://localhost:3000/__tsd/open-source?source=%2Fsrc%2Fcomponents%2Fprocesses%2Ftask-card.tsx%3A68%3A3  →  [render] task {title: 'Edit Audio', position: 2, count: 10}
+__root.tsx:38 LOG Go to Source: http://localhost:3000/__tsd/open-source?source=%2Fsrc%2Fcomponents%2Fprocesses%2Ftask-card.tsx%3A68%3A3  →  [render] task {title: 'Write Shownotes', position: 3, count: 10}
+__root.tsx:38 LOG Go to Source: http://localhost:3000/__tsd/open-source?source=%2Fsrc%2Fcomponents%2Fprocesses%2Ftask-card.tsx%3A68%3A3  →  [render] task {title: 'Task assigned to Cherre', position: 4, count: 10}
+__root.tsx:38 LOG Go to Source: http://localhost:3000/__tsd/open-source?source=%2Fsrc%2Fcomponents%2Fprocesses%2Ftask-card.tsx%3A68%3A3  →  [render] task {title: 'Unassigned Task', position: 5, count: 10}
+__root.tsx:38 LOG Go to Source: http://localhost:3000/__tsd/open-source?source=%2Fsrc%2Fcomponents%2Fprocesses%2Ftask-card.tsx%3A68%3A3  →  [render] task {title: 'QA Shownotes', position: 6, count: 10}
+__root.tsx:38 LOG Go to Source: http://localhost:3000/__tsd/open-source?source=%2Fsrc%2Fcomponents%2Fprocesses%2Ftask-card.tsx%3A68%3A3  →  [render] task {title: 'Create Social Assets', position: 7, count: 10}
+__root.tsx:38 LOG Go to Source: http://localhost:3000/__tsd/open-source?source=%2Fsrc%2Fcomponents%2Fprocesses%2Ftask-card.tsx%3A68%3A3  →  [render] task {title: 'Send Links to Client', position: 8, count: 10}
+__root.tsx:38 LOG Go to Source: http://localhost:3000/__tsd/open-source?source=%2Fsrc%2Fcomponents%2Fprocesses%2Ftask-card.tsx%3A68%3A3  →  [render] task {title: 'Create Social Assets (not empty)', position: 9, count: 10}
+__root.tsx:38 LOG Go to Source: http://localhost:3000/__tsd/open-source?source=%2Fsrc%2Fcomponents%2Fprocesses%2Ftask-card.tsx%3A68%3A3  →  [render] task {title: 'Send links to client (not empty)', position: 10, count: 10}

@@ -1,5 +1,5 @@
 import * as React from "react";
-import { ChevronRight, Pencil } from "lucide-react";
+import { ChevronRight, GripVertical, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -17,16 +17,41 @@ import { VisibilityTab } from "@/components/processes/visibility-tab";
 import { DependenciesTab } from "@/components/processes/dependencies-tab";
 import { DatesTab } from "@/components/processes/dates-tab";
 import { ActionsTab } from "@/components/processes/actions-tab";
+import { useSortableItem } from "@/components/processes/sortable";
 import type { Database } from "@/lib/database.types";
 
 type TaskTemplate = Database["public"]["Tables"]["task_templates"]["Row"];
 
+// Thin sortable wrapper: owns the useSortable subscription + the <li>. This is
+// what re-renders on every pointer move during a drag (cheap — just updates the
+// <li> style). The heavy TaskCard inside is memoized with stable props, so it
+// does NOT re-render during the drag.
+export function SortableTaskRow({
+  processId,
+  template,
+}: {
+  processId: string;
+  template: TaskTemplate;
+}) {
+  const { setNodeRef, style, handleProps } = useSortableItem(template.id);
+  return (
+    <li ref={setNodeRef} style={style} className="bg-page">
+      <TaskCard
+        processId={processId}
+        template={template}
+        handleProps={handleProps}
+      />
+    </li>
+  );
+}
+
 interface TaskCardProps {
   processId: string;
   template: TaskTemplate;
+  handleProps: React.HTMLAttributes<HTMLElement>;
 }
 
-export function TaskCard({ processId, template }: TaskCardProps) {
+function TaskCardImpl({ processId, template, handleProps }: TaskCardProps) {
   const roles = useRoles();
   const people = usePeople();
   const renameTask = useRenameTaskTemplate(processId);
@@ -36,6 +61,15 @@ export function TaskCard({ processId, template }: TaskCardProps) {
   const [editing, setEditing] = React.useState(false);
   const [titleDraft, setTitleDraft] = React.useState(template.title);
   const [confirmingDelete, setConfirmingDelete] = React.useState(false);
+
+  // TEMP INSTRUMENTATION (Phase 6 DnD debug) — remove after diagnosis.
+  const renderCount = React.useRef(0);
+  renderCount.current += 1;
+  console.log("[render] task", {
+    title: template.title,
+    position: template.position,
+    count: renderCount.current,
+  });
 
   const assignmentLabel = getAssignmentLabel(
     template,
@@ -56,8 +90,16 @@ export function TaskCard({ processId, template }: TaskCardProps) {
   }
 
   return (
-    <li className="bg-page">
+    <>
       <div className="flex items-center gap-3 px-4 py-3">
+        <button
+          type="button"
+          {...handleProps}
+          aria-label="Drag to reorder"
+          className="cursor-grab touch-none text-ink-muted hover:text-ink-display active:cursor-grabbing"
+        >
+          <GripVertical className="h-4 w-4" />
+        </button>
         <button
           type="button"
           onClick={() => setExpanded((v) => !v)}
@@ -180,7 +222,57 @@ export function TaskCard({ processId, template }: TaskCardProps) {
           </Tabs>
         </div>
       )}
-    </li>
+    </>
+  );
+}
+
+// Memoized so it doesn't re-render during a drag (the SortableTaskRow wrapper
+// re-renders per move, but passes stable props here). The custom comparator
+// re-renders only when a *displayed* field changes — NOT merely when the
+// template object reference changes. Background refetches of the byProcess query
+// return fresh row objects (and bump updated_at), so a default shallow compare
+// would re-render every row whenever a refetch coincides with a drop, flashing
+// the text. Ignoring identity (and timestamps) makes display-identical refetches
+// a no-op. processId + handleProps are already referentially stable.
+const TaskCard = React.memo(TaskCardImpl, (prev, next) => {
+  if (prev.processId !== next.processId) return false;
+  if (prev.handleProps !== next.handleProps) return false;
+  const a = prev.template;
+  const b = next.template;
+  return (
+    a.id === b.id &&
+    a.process_id === b.process_id &&
+    a.title === b.title &&
+    a.description === b.description &&
+    a.position === b.position &&
+    a.assignment_mode === b.assignment_mode &&
+    a.assigned_role_id === b.assigned_role_id &&
+    a.assigned_user_id === b.assigned_user_id &&
+    a.visibility_logic === b.visibility_logic
+  );
+});
+
+// Lightweight presentation rendered in the DragOverlay while dragging — the
+// card header look, without the sortable wiring / tabs.
+export function TaskCardOverlay({ template }: { template: TaskTemplate }) {
+  const roles = useRoles();
+  const people = usePeople();
+  const assignmentLabel = getAssignmentLabel(
+    template,
+    roles.data ?? [],
+    people.data ?? [],
+  );
+  return (
+    <div className="flex items-center gap-3 rounded-md border border-hairline bg-page px-4 py-3 shadow-lg">
+      <GripVertical className="h-4 w-4 text-ink-muted" />
+      <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-surface text-xs font-medium text-ink-muted">
+        {template.position + 1}
+      </span>
+      <span className="min-w-0 flex-1 truncate text-sm font-medium text-ink-display">
+        {template.title}
+      </span>
+      <Badge tone={assignmentLabel.tone}>{assignmentLabel.text}</Badge>
+    </div>
   );
 }
 

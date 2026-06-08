@@ -187,3 +187,46 @@ export function useDeleteTaskTemplate(processId: string) {
     },
   });
 }
+
+// Immediate-persist reorder (matches v1): on drop, write position 0..n for the
+// new order. Optimistic; success is silent (reordering is frequent).
+export function useReorderTaskTemplates(processId: string) {
+  const qc = useQueryClient();
+  const { error } = useToast();
+  const key = queryKeys.taskTemplates.byProcess(processId);
+
+  return useMutation({
+    mutationFn: async (orderedIds: string[]) => {
+      const results = await Promise.all(
+        orderedIds.map((id, i) =>
+          supabase.from("task_templates").update({ position: i }).eq("id", id),
+        ),
+      );
+      const failed = results.find((r) => r.error);
+      if (failed?.error) throw failed.error;
+    },
+    onMutate: async (orderedIds) => {
+      await qc.cancelQueries({ queryKey: key });
+      const previous = qc.getQueryData<TaskTemplateRow[]>(key);
+      if (previous) {
+        const byId = new Map(previous.map((t) => [t.id, t]));
+        const reordered = orderedIds
+          .map((id, i) => {
+            const t = byId.get(id);
+            return t ? { ...t, position: i } : null;
+          })
+          .filter((t): t is TaskTemplateRow => !!t);
+        qc.setQueryData<TaskTemplateRow[]>(key, reordered);
+      }
+      return { previous };
+    },
+    onError: (_err, _input, ctx) => {
+      if (ctx?.previous) qc.setQueryData(key, ctx.previous);
+      error("Couldn't reorder tasks", "Please try again.");
+    },
+    // Intentionally NO settle-invalidate: the optimistic update already writes
+    // position 0..n, exactly what we persist, so the cache is authoritative. A
+    // refetch here would cause a second render that re-measures the sortable
+    // list and produces a visible bounce/flash on the reordered rows.
+  });
+}
