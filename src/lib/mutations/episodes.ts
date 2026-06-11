@@ -211,3 +211,23 @@ export function useCreateEpisode(workflowId: string) {
     onSettled: () => qc.invalidateQueries({ queryKey: queryKeys.episodes.all }),
   });
 }
+
+// Deletes an episode. episodes → tasks is ON DELETE CASCADE, so this also
+// removes the generated task list (the delete dialog confirms that explicitly).
+export function useDeleteEpisode() {
+  const qc = useQueryClient();
+  const { success, error } = useToast();
+
+  return useMutation({
+    mutationFn: async (input: { id: string }) => {
+      const { error: err } = await supabase
+        .from("episodes")
+        .delete()
+        .eq("id", input.id);
+      if (err) throw err;
+    },
+    onError: () => error("Couldn't delete episode", "Please try again."),
+    onSuccess: () => success("Episode deleted"),
+    onSettled: () => qc.invalidateQueries({ queryKey: queryKeys.episodes.all }),
+  });
+}

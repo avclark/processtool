@@ -84,6 +84,8 @@ export const queryKeys = {
     all: ["tasks"] as const,
     openCountByUser: (userId: string) =>
       [...queryKeys.tasks.all, "openCountByUser", userId] as const,
+    byEpisode: (episodeId: string) =>
+      [...queryKeys.tasks.all, "byEpisode", episodeId] as const,
   },
   settingDefinitions: {
     all: ["settingDefinitions"] as const,

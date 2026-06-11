@@ -89,6 +89,26 @@ export function useEpisodesByWorkflow(workflowId: string) {
   return useQuery(episodesByWorkflowQueryOptions(workflowId));
 }
 
+// The generated task instances for an episode, with their (snapshotted) blocks.
+export function episodeTasksQueryOptions(episodeId: string) {
+  return queryOptions({
+    queryKey: queryKeys.tasks.byEpisode(episodeId),
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("tasks")
+        .select("*, task_instance_blocks(*)")
+        .eq("episode_id", episodeId)
+        .order("position");
+      if (error) throw error;
+      return data;
+    },
+  });
+}
+
+export function useEpisodeTasks(episodeId: string) {
+  return useQuery(episodeTasksQueryOptions(episodeId));
+}
+
 export function useEpisodeCountByProcess(processId: string, enabled = true) {
   return useQuery({
     ...episodeCountByProcessQueryOptions(processId),
