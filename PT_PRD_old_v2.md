@@ -249,8 +249,6 @@ Each phase = one branch = one (or a few tightly-scoped) Claude Code prompt(s). V
 > Phase prompts below are summaries of intent and scope, including explicit "do NOT build yet" boundaries. Full per-phase prompts can be generated one at a time when you reach each phase.
 
 > **v3 re-sequencing note:** Episode generation grew into a cluster (generation + tags + the unified rule engine). **Phases 1–6 are complete and merged; their text is left exactly as built and is not modified by v3.** The new work is inserted as **7, 7.5, 7.6, 7.7**. Because Phase 5 (merged) authored only show-attribute conditionals and basic task-completion dependencies, the expanded four-input rule engine is *authored* in the new Phase 7.6 (template side) and *evaluated* in Phase 7.7 (instance side), rather than retroactively rewritten into Phase 5. Phase 8 inherits two new requirements (orphan-dependency display; completion-triggered rule re-evaluation). Phases 8–16 keep their numbers.
->
-> **v4 addendum:** A roadmap gap surfaced during Phase 7 verification — workflow **creation/assignment/deletion** was never scheduled (Phase 3 gave workflows a read-only list + detail shell; Phase 4 covered only Shows & People CRUD; everything after merely *consumed* existing workflows carried over from v1 data). It is added as **Phase 7.8 (Workflows CRUD)**, after the rule sub-phases and before Phase 8, keeping the established 7.5/7.6/7.7 numbers stable per the decimal-numbering convention.
 
 ### Phase 1 — Project scaffold + design system foundation
 **Branch:** `phase-1/scaffold-design-system`
@@ -336,15 +334,6 @@ Each phase = one branch = one (or a few tightly-scoped) Claude Code prompt(s). V
 - Optional generation-time blocked-dependency notice (Section 5B).
 - **Do NOT build:** the date cascade or instance block editing (Phase 8); email sending (Phase 12).
 
-### Phase 7.8 — Workflows CRUD (create / assign-process / delete)
-**Branch:** `phase-7-8/workflows-crud`
-- **Gap fix:** earlier phases gave workflows a read-only list and a read-only detail shell (Phase 3) and then *consumed* an existing workflow's assigned process for episode generation (Phase 7), but no phase ever built the ability to **create** a workflow, **assign / change / detach** its process, or **delete** it. Test workflows have existed only because they were carried over from the v1 Supabase data (Section 9), which is why the gap stayed hidden until a *new* workflow in a specific state was needed. This phase closes it.
-- **Create workflow:** name + parent show; optionally assign a process at creation (a workflow is a show-level container holding a single process — Section 2). Explicit-save.
-- **Assign / change / detach process:** set or swap the workflow's process; allow leaving it with no process assigned (this is the state that makes the Phase 7 "no assigned process → New Episode disabled with hint" path reachable and testable — confirm that gating works once this lands).
-- **Delete workflow:** design-system confirm dialog. Be explicit about cascade behavior to episodes/tasks (mirror the ON DELETE CASCADE awareness in Section 7); state what will be removed and require confirmation. Do not silently cascade.
-- Wire into the existing Phase 3 Workflows list + detail shell (add the create action to the list page header; make the detail shell's process assignment editable).
-- **Do NOT build:** changes to episode generation (Phase 7 already handles consumption); the empty-episode/manual-Add-Task path (deferred, schema-migration-gated — see Section 5B / Section 11); reordering or bulk operations on workflows.
-
 ### Phase 8 — Episode task list: completion, status, instance editing
 **Branch:** `phase-8/episode-editing`
 - Task status (open / blocked / completed); blocked tasks rendered disabled (blocking comes from the live dependency engine in 7.7).
@@ -411,7 +400,7 @@ Each phase = one branch = one (or a few tightly-scoped) Claude Code prompt(s). V
 - Custom domain. Smoke test with real auth + real (test) data.
 - Merge to `main`. Start using it.
 
-> The weight is concentrated in Phases 7 / 7.5 / 7.6 / 7.7 (generation, tags, rule authoring, instance-side rule evaluation), Phase 11 (auth), and Phase 12 (notifications) — the same places that were heavy in v1, plus the tag/rule work that v1 had but earlier drafts under-specified. (Phase 5, the builder, was also heavy but is complete and merged. Phase 7.8, workflows CRUD, is light — it fills a roadmap gap, not a hard problem.) The phase that broke v1 (the UI/design pass) no longer exists as a phase; it's Phase 1 and it's woven through everything.
+> The weight is concentrated in Phases 7 / 7.5 / 7.6 / 7.7 (generation, tags, rule authoring, instance-side rule evaluation), Phase 11 (auth), and Phase 12 (notifications) — the same places that were heavy in v1, plus the tag/rule work that v1 had but earlier drafts under-specified. (Phase 5, the builder, was also heavy but is complete and merged.) The phase that broke v1 (the UI/design pass) no longer exists as a phase; it's Phase 1 and it's woven through everything.
 
 ---
 
@@ -560,6 +549,3 @@ If you lose context: re-read CLAUDE.md and PRD.md before continuing.
 5. **Hidden-task reference rule:** a hidden task counts as not-complete / empty for other tasks' rules.
 6. **Date model clarified (Section 5D):** rule-as-relationship, compute-when-anchor-exists, cascade assigned to Phase 8.
 7. **Phases re-sequenced (Phases 1–6 left untouched as built):** new Phase 7.5 (tags), Phase 7.6 (unified rule authoring, template side — the work that would have extended Phase 5 had it not already shipped), and Phase 7.7 (unified instance-side live rule evaluation); Phase 8 gains orphan-dependency display + completion-triggered re-evaluation. Phases 8–16 keep their numbers.
-
-## Changelog (v3 → v4)
-1. **Phase 7.8 — Workflows CRUD added.** A gap surfaced during Phase 7 verification: no phase ever built workflow creation, process assignment/detachment, or deletion — workflows existed only as v1-carryover data. Added as Phase 7.8 (after the rule sub-phases, before Phase 8) so the established 7.5/7.6/7.7 numbers stay stable. This phase is also what makes the Phase 7 "no assigned process → New Episode disabled" path reachable and testable.

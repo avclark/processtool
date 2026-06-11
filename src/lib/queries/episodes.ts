@@ -65,8 +65,28 @@ export function episodeCountByProcessQueryOptions(processId: string) {
   });
 }
 
+// Episodes belonging to one workflow (shown on the workflow detail page).
+export function episodesByWorkflowQueryOptions(workflowId: string) {
+  return queryOptions({
+    queryKey: queryKeys.episodes.byWorkflow(workflowId),
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("episodes")
+        .select("id, title, status, progress_percent, created_at, shows(name)")
+        .eq("workflow_id", workflowId)
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return data;
+    },
+  });
+}
+
 export function useEpisodes() {
   return useQuery(episodesQueryOptions);
+}
+
+export function useEpisodesByWorkflow(workflowId: string) {
+  return useQuery(episodesByWorkflowQueryOptions(workflowId));
 }
 
 export function useEpisodeCountByProcess(processId: string, enabled = true) {

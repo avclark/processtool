@@ -68,6 +68,8 @@ export const queryKeys = {
     all: ["episodes"] as const,
     list: () => [...queryKeys.episodes.all, "list"] as const,
     detail: (id: string) => [...queryKeys.episodes.all, id] as const,
+    byWorkflow: (workflowId: string) =>
+      [...queryKeys.episodes.all, "byWorkflow", workflowId] as const,
     countByShow: (showId: string) =>
       [...queryKeys.episodes.all, "countByShow", showId] as const,
     countByProcess: (processId: string) =>
